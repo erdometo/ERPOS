@@ -1,0 +1,9 @@
+langchain
+langchain-core
+langchain-openai
+pydantic
+sqlalchemy
+sqlparse
+python-dotenv
+fastapi
+uvicorn
