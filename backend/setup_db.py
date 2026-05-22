@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, Text, text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timedelta
@@ -81,6 +82,19 @@ class VectorPartition(Base):
     node = relationship("GraphNode", back_populates="vector_partitions")
 
 
+# ==================== 4. APPEND-ONLY AUDIT LEDGER LAYER ====================
+class AuditLedger(Base):
+    __tablename__ = 'audit_ledger'
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    agent_name = Column(String(100), nullable=False)
+    action_type = Column(String(50), nullable=False) # e.g., 'SCHEMA_EVOLUTION', 'TRANSACTION_MUTATION'
+    action_details = Column(Text, nullable=False) # JSON-encoded parameters
+    governing_node_id = Column(Integer, ForeignKey('graph_nodes.id'), nullable=True)
+    prev_hash = Column(String(64), nullable=False)
+    row_hash = Column(String(64), nullable=False)
+
+
 # ==================== INITIALIZATION & SEEDING ====================
 def init_db(db_path="sqlite:///erp_database.db"):
     engine = create_engine(db_path)
@@ -106,6 +120,7 @@ def seed_data(engine):
     session.query(GraphNode).delete()
     session.query(GraphEdge).delete()
     session.query(VectorPartition).delete()
+    session.query(AuditLedger).delete()
     session.commit()
 
     # Seed Tabular SQL
@@ -256,6 +271,44 @@ Fulfills stock restocking parameters when product inventories fall below thresho
     )
 
     session.add_all([p1, p2, p3, p4])
+    session.commit()
+
+    # --- Seeding Cryptographically Chained Audit Ledger ---
+    print("Seeding Audit Ledger with Cryptographic SHA-256 chain...")
+    genesis_details = json.dumps({"message": "Genesis Block of OmniGate ERP OS Ledger"})
+    genesis_prev_hash = "0" * 64
+    genesis_time = datetime(2026, 5, 20, 12, 0, 0)
+    
+    # Format: ISO_timestamp|agent_name|action_type|action_details|prev_hash
+    genesis_data = f"{genesis_time.isoformat()}|System Kernel|GENESIS|{genesis_details}|{genesis_prev_hash}"
+    genesis_hash = hashlib.sha256(genesis_data.encode("utf-8")).hexdigest()
+    
+    g_block = AuditLedger(
+        timestamp=genesis_time,
+        agent_name="System Kernel",
+        action_type="GENESIS",
+        action_details=genesis_details,
+        prev_hash=genesis_prev_hash,
+        row_hash=genesis_hash
+    )
+    session.add(g_block)
+    session.commit()
+    
+    # 2. Add DB Initialization Event
+    rec1_time = genesis_time + timedelta(minutes=2)
+    rec1_details = json.dumps({"action": "Seed relational tables and initial governance workflows"})
+    rec1_data = f"{rec1_time.isoformat()}|System Seeder|DB_INITIALIZATION|{rec1_details}|{genesis_hash}"
+    rec1_hash = hashlib.sha256(rec1_data.encode("utf-8")).hexdigest()
+    
+    row1 = AuditLedger(
+        timestamp=rec1_time,
+        agent_name="System Seeder",
+        action_type="DB_INITIALIZATION",
+        action_details=rec1_details,
+        prev_hash=genesis_hash,
+        row_hash=rec1_hash
+    )
+    session.add(row1)
     session.commit()
 
     print("Hybrid SQL + Graph (with skill.md) + Mapped Vector Partitions database seeded successfully.")

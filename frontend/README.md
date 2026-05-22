@@ -1,49 +1,55 @@
-# OmniGate ERP OS: Generative Frontend Terminal
+# 🖥️ OmniGate ERP OS: Generative Frontend Terminal
 
-This directory houses the React + TypeScript + Vite frontend client for the **OmniGate ERP OS**. It serves as an interactive glassmorphic terminal where users submit natural language commands to the Agentic Kernel and inspect the dynamically generated interfaces returned in real time.
+This is the React + TypeScript + Vite frontend client for the **OmniGate ERP OS**. It serves as a glassmorphic terminal interface where users submit commands to the Agentic Kernel, view agent traces, and interact with dynamically compiled dashboards.
 
-## 🚀 Key Features
+---
 
-1. **Zero-UI Generative Dashboard Container**:
-   - The interface is not static; it contains a placeholder for dynamic, code-compiled React dashboards.
-   - When the agent returns code (JSX), the frontend compiles and mounts it on-the-fly.
+## 🎨 Phase 2 UI Upgrades
 
-2. **In-Browser Babel Standalone Sandboxing**:
-   - Compiles agent-formulated JSX code directly in the browser environment utilizing the `@babel/standalone` compiler.
-   - Dynamically executes custom event callbacks (`onAction`) so generated interactive buttons (e.g., *Approve Waiver*, *Restock 50 Units*) run queries against the backend ledger.
+The terminal is designed with sleek glassmorphic aesthetics, neon indicators, and interactive micro-animations to support Phase 2 functionalities:
 
-3. **Active Schema Explorer**:
-   - Provides a live tab to visualize both tabular relational tables (with data types) and the graph workflow ledger (`skill.md` rules and edge connections) updated dynamically.
+### 1. Generative UI Sandbox (`DynamicRenderer`)
+*   **Babel Standalone Compilation**: Leverages browser-side `@babel/standalone` to compile agent-formulated JSX code on-the-fly.
+*   **Action Intercept System**: Mounts the compiled component with an `onAction` callback. When the user interacts with generated buttons (like *Approve Order* or *Reorder Stock*), the application compiles parameter-mapped SQL updates and submits them to the backend sandbox API at `/api/action/execute`.
 
-4. **Multi-Track Suggestion Command Palette**:
-   - Includes test chips to run Operational Audits, SQL Schema Evolution, Graph Workflow Evolution, Vector Document Partitioning, and FinOps Circuit Breaker loops.
+### 2. Interactive Schema Explorer & Governance Graph
+*   **Visual SVG Topology Map**: A custom SVG canvas rendering the business rules and policy nodes in a live node-link diagram.
+    *   **Workflow & Regulation Nodes**: Hover and click interactions to inspect specific nodes.
+    *   **Governance Details**: Displays description, active parameters, and bound markdown directives (`skill.md`) immediately on selection.
+*   **Active Table Schemas**: Displays SQLite schemas next to the visual topology for side-by-side database structure and agent rule monitoring.
 
-5. **Agent Log Stream Terminal**:
-   - Displays chronological multi-agent execution traces detailing thoughts, tool invocations, inputs, and observations for deep inspectability and trust auditing.
+### 3. Append-Only Cryptographic Ledger Timeline
+*   **Real-time Chain Verification**: Displays a visual timeline of transaction blocks recorded in the database ledger.
+*   **Cryptographic Status Banners**:
+    *   🟢 **Green Banner**: Success banner when all blocks have matching, chained SHA-256 signatures.
+    *   🔴 **Red Alert Banner**: Glow-shake banner flagging database tampering out-of-band, listing the exact corrupted block indices.
+*   **Verification Payload Details**: Clickable panels showing transaction details, timestamps, executing agent, and raw cryptographic signatures (`prev_hash` & `row_hash`).
 
-## 🛠️ Tech Stack & Setup
+### 4. Interactive Suggestion Chips
+Includes shortcuts to trigger compliance audits, evolutionary schema creations, infinite loop tests (verifying FinOps breakers), and direct cryptographic ledger verifications.
 
-*   **Core**: React 19, TypeScript 5, Vite 8
-*   **Styling**: Modern CSS + TailwindCSS (for utility layout structure)
+---
+
+## 🛠️ Technology Stack
+
+*   **Framework**: React 19 + Vite 8 (TypeScript)
+*   **Styling**: Vanilla CSS (Premium dark mode assets) + TailwindCSS (Play CDN structure)
 *   **Icons**: `lucide-react`
-*   **Dynamic Compiler**: `@babel/standalone` (loaded via script header in `index.html`)
+*   **Compiler**: In-browser `@babel/standalone`
 
-### Running the Terminal
+---
 
-1. **Install dependencies**:
+## 🚀 Running the Terminal
+
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-2. **Run dev server**:
+2. **Start Dev Server**:
    ```bash
    npm run dev
    ```
 
-3. **Access UI**:
+3. **Access Application**:
    Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-## 📁 Key File Structure
-
-*   `src/App.tsx`: The primary container managing system layout, query requests, action callback execution, and log streams. Contains the `DynamicRenderer` component which evaluates Babel-transpiled JSX code inside a sandboxed execution frame.
-*   `index.html`: Bootstraps the application, fetching TailwindCSS reset and Babel standalone via CDN for browser-side script compiling.

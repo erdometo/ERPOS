@@ -34,6 +34,12 @@ class ActionRequest(BaseModel):
     params: dict
 
 
+class ActionExecuteRequest(BaseModel):
+    query: str
+    params: dict = {}
+    governing_node_id: int = None
+
+
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
 def run_real_llm_agent(question: str):
     from langchain_openai import ChatOpenAI
@@ -1202,6 +1208,13 @@ Governs rapid logistics dispatch of high value or high priority product freight 
 @app.post("/api/query")
 async def execute_query(req: QueryRequest):
     try:
+        # Log query request to audit ledger
+        gateway.log_audit_event(
+            agent_name="Autonomous Kernel Agent",
+            action_type="QUERY_ANALYSIS",
+            action_details=json.dumps({"question": req.question})
+        )
+        
         api_key = os.getenv("OPENAI_API_KEY")
         # If API KEY is present, run the true LLM agent execution
         if api_key:
@@ -1251,6 +1264,14 @@ async def execute_action(req: ActionRequest):
                     {"name": product_name}
                 )
                 conn.commit()
+            
+            # Log this override event into the compliance ledger
+            gateway.log_audit_event(
+                agent_name="Supply Chain Agent",
+                action_type="TRANSACTION_MUTATION",
+                action_details=json.dumps({"action": "reorder_stock", "product_name": product_name})
+            )
+            
             return {
                 "status": "success",
                 "message": f"Supply Chain Action: Initiated purchase request. Added 50 units stock replenishment for '{product_name}'.",
@@ -1261,12 +1282,106 @@ async def execute_action(req: ActionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.post("/api/action/execute")
+async def execute_action_execute(req: ActionExecuteRequest):
+    try:
+        result = gateway.execute_action_mutation(
+            sql_query_str=req.query,
+            params=req.params,
+            agent_name="Autonomous Kernel Agent",
+            governing_node_id=req.governing_node_id
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ledger")
+async def get_ledger():
+    try:
+        with gateway.engine.connect() as conn:
+            result = conn.execute(text("SELECT id, timestamp, agent_name, action_type, action_details, governing_node_id, prev_hash, row_hash FROM audit_ledger ORDER BY id DESC"))
+            rows = result.fetchall()
+            
+            events = []
+            for row in rows:
+                row_id, timestamp, agent_name, action_type, action_details, governing_node_id, prev_hash, row_hash = row
+                try:
+                    parsed_details = json.loads(action_details)
+                except Exception:
+                    parsed_details = action_details
+                
+                events.append({
+                    "id": row_id,
+                    "timestamp": timestamp.isoformat() if hasattr(timestamp, "isoformat") else str(timestamp),
+                    "agent_name": agent_name,
+                    "action_type": action_type,
+                    "action_details": parsed_details,
+                    "governing_node_id": governing_node_id,
+                    "prev_hash": prev_hash,
+                    "row_hash": row_hash
+                })
+        
+        tampered_indices = gateway.verify_ledger_integrity()
+        is_verified = len(tampered_indices) == 0
+        
+        return {
+            "is_verified": is_verified,
+            "tampered_indices": tampered_indices,
+            "events": events
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/schema")
 async def get_schema():
     try:
         return {"schema": gateway.get_schema_info()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/graph")
+async def get_graph():
+    try:
+        with gateway.engine.connect() as conn:
+            node_check = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='graph_nodes';")).fetchone()
+            if not node_check:
+                return {"nodes": [], "edges": []}
+            
+            nodes_res = conn.execute(text("SELECT id, label, name, description, properties FROM graph_nodes;")).fetchall()
+            edges_res = conn.execute(text("SELECT id, source_id, target_id, edge_type FROM graph_edges;")).fetchall()
+            
+            nodes = []
+            for row in nodes_res:
+                try:
+                    props = json.loads(row[4]) if row[4] else {}
+                except Exception:
+                    props = {}
+                nodes.append({
+                    "id": row[0],
+                    "label": row[1],
+                    "name": row[2],
+                    "description": row[3],
+                    "properties": props
+                })
+                
+            edges = []
+            for row in edges_res:
+                edges.append({
+                    "id": row[0],
+                    "source": row[1],
+                    "target": row[2],
+                    "type": row[3]
+                })
+                
+            return {"nodes": nodes, "edges": edges}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

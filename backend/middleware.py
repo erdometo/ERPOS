@@ -2,6 +2,8 @@ import os
 import json
 import sqlparse
 import math
+import hashlib
+from datetime import datetime
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from pydantic import BaseModel, Field, field_validator
@@ -63,11 +65,144 @@ class DBASchemaMutation(BaseModel):
         return v
 
 
+class GeneralizedActionMutation(BaseModel):
+    query: str = Field(description="The parameterized SQL query to execute")
+    params: dict = Field(default_factory=dict, description="Parameters for the query")
+    
+    @field_validator('query')
+    @classmethod
+    def validate_action(cls, v: str) -> str:
+        parsed = sqlparse.parse(v)
+        if not parsed:
+            raise ValueError("Invalid SQL")
+        
+        for statement in parsed:
+            stmt_type = statement.get_type().upper()
+            allowed_types = ['UPDATE', 'INSERT']
+            if stmt_type not in allowed_types:
+                raise ValueError(f"UNAUTHORIZED ACTION TYPE: {stmt_type}. Only UPDATE and INSERT queries are allowed for action execution.")
+            
+            # Completely block destructive operations
+            forbidden_keywords = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE']
+            upper_query = v.upper()
+            for keyword in forbidden_keywords:
+                if f" {keyword} " in upper_query or upper_query.startswith(f"{keyword} ") or f"\n{keyword} " in upper_query or upper_query.endswith(f" {keyword}"):
+                    raise ValueError(f"FORBIDDEN KEYWORD DETECTED: {keyword}. Action execution blocked by middleware.")
+            
+            # Block system tables
+            forbidden_tables = ['graph_nodes', 'graph_edges', 'vector_partitions', 'audit_ledger', 'sqlite_master', 'sqlite_sequence']
+            lower_query = v.lower()
+            for table in forbidden_tables:
+                if table in lower_query:
+                    raise ValueError(f"UNAUTHORIZED SYSTEM TABLE ACCESS: Attempted modification of system table '{table}' blocked.")
+        return v
+
+
 # ==================== 2. THE MULTI-MODEL MIDDLEWARE GATEWAY ====================
 class ShieldGateway:
     def __init__(self, db_path=DB_FILE_PATH):
         self.db_path = db_path
         self.engine = create_engine(f"sqlite:///{db_path}")
+
+    # --- AUDIT LEDGER HELPERS ---
+    def log_audit_event(self, agent_name: str, action_type: str, action_details: str, governing_node_id: int = None):
+        try:
+            timestamp = datetime.utcnow().replace(microsecond=0)
+            with self.engine.connect() as conn:
+                # Get the last row's hash
+                last_res = conn.execute(text("SELECT row_hash FROM audit_ledger ORDER BY id DESC LIMIT 1")).fetchone()
+                prev_hash = last_res[0] if last_res else "0" * 64
+                
+                # Compute hash (robust formatting: replace space with T, strip microseconds)
+                ts_str = timestamp.isoformat()
+                if " " in ts_str:
+                    ts_str = ts_str.replace(" ", "T")
+                if "." in ts_str:
+                    ts_str = ts_str.split(".")[0]
+                
+                data_str = f"{ts_str}|{agent_name}|{action_type}|{action_details}|{prev_hash}"
+                row_hash = hashlib.sha256(data_str.encode("utf-8")).hexdigest()
+                
+                # Insert row
+                ins_q = text("""
+                    INSERT INTO audit_ledger (timestamp, agent_name, action_type, action_details, governing_node_id, prev_hash, row_hash)
+                    VALUES (:timestamp, :agent_name, :action_type, :action_details, :governing_node_id, :prev_hash, :row_hash)
+                """)
+                conn.execute(ins_q, {
+                    "timestamp": timestamp,
+                    "agent_name": agent_name,
+                    "action_type": action_type,
+                    "action_details": action_details,
+                    "governing_node_id": governing_node_id,
+                    "prev_hash": prev_hash,
+                    "row_hash": row_hash
+                })
+                conn.commit()
+            return {"status": "success", "row_hash": row_hash}
+        except Exception as e:
+            print(f"Failed to log audit event: {e}")
+            return {"error": str(e)}
+
+    def verify_ledger_integrity(self) -> list:
+        tampered_indices = []
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text("SELECT id, timestamp, agent_name, action_type, action_details, prev_hash, row_hash FROM audit_ledger ORDER BY id ASC"))
+                rows = result.fetchall()
+                
+                expected_prev_hash = "0" * 64
+                for row in rows:
+                    row_id, timestamp, agent_name, action_type, action_details, prev_hash, row_hash = row
+                    
+                    # Robust format conversion (replace space with T, strip microseconds)
+                    ts_str = str(timestamp)
+                    if " " in ts_str:
+                        ts_str = ts_str.replace(" ", "T")
+                    if "." in ts_str:
+                        ts_str = ts_str.split(".")[0]
+                    
+                    # Recompute hash
+                    data_str = f"{ts_str}|{agent_name}|{action_type}|{action_details}|{prev_hash}"
+                    computed_hash = hashlib.sha256(data_str.encode("utf-8")).hexdigest()
+                    
+                    # Verify block linkage
+                    if prev_hash != expected_prev_hash:
+                        tampered_indices.append(row_id)
+                    # Verify block content integrity
+                    elif row_hash != computed_hash:
+                        tampered_indices.append(row_id)
+                        
+                    expected_prev_hash = row_hash
+        except Exception as e:
+            print(f"Ledger verification error: {e}")
+        return tampered_indices
+
+    # --- GENERALIZED MUTATION ACTION ENGINE ---
+    def execute_action_mutation(self, sql_query_str: str, params: dict = None, agent_name: str = "Autonomous Kernel Agent", governing_node_id: int = None):
+        try:
+            if params is None:
+                params = {}
+            # Validate query and parameters using GeneralizedActionMutation
+            validated = GeneralizedActionMutation(query=sql_query_str.strip(), params=params)
+            
+            with self.engine.connect() as conn:
+                conn.execute(text(validated.query), validated.params)
+                conn.commit()
+            
+            # Log action to audit ledger
+            self.log_audit_event(
+                agent_name=agent_name,
+                action_type="TRANSACTION_MUTATION",
+                action_details=json.dumps({"query": validated.query, "params": validated.params}),
+                governing_node_id=governing_node_id
+            )
+            
+            return {
+                "status": "success",
+                "message": "Action executed successfully and recorded in the audit ledger."
+            }
+        except Exception as e:
+            return {"error": f"Action Execution Blocked: {str(e)}"}
 
     # --- A. SQL GATEWAY (Transactional) ---
     def execute_sql(self, sql_query_str: str):
@@ -189,12 +324,21 @@ class ShieldGateway:
             return {"error": f"Node Vector Search Error: {str(e)}"}
 
     # --- E. EVOLUTIONARY DBA MUTATION GATEWAY ---
-    def execute_ddl(self, ddl_sql: str):
+    def execute_ddl(self, ddl_sql: str, agent_name: str = "Autonomous Kernel Agent", governing_node_id: int = None):
         try:
             validated = DBASchemaMutation(query=ddl_sql.strip())
             with self.engine.connect() as conn:
                 conn.execute(text(validated.query))
                 conn.commit()
+            
+            # Log to audit ledger
+            self.log_audit_event(
+                agent_name=agent_name,
+                action_type="SCHEMA_EVOLUTION",
+                action_details=json.dumps({"ddl_query": validated.query}),
+                governing_node_id=governing_node_id
+            )
+            
             return {"status": "success", "message": "Database schema evolved successfully."}
         except Exception as e:
             return {"error": f"DBA Schema Mutation Blocked: {str(e)}"}
@@ -257,7 +401,7 @@ class ShieldGateway:
             return f"Schema extraction error: {str(e)}"
 
     # --- G. EVOLUTIONARY GRAPH MUTATION GATEWAY ---
-    def execute_graph_mutation(self, label: str, name: str, description: str, skill_markdown: str, properties: str = "{}", target_edges: list = None):
+    def execute_graph_mutation(self, label: str, name: str, description: str, skill_markdown: str, properties: str = "{}", target_edges: list = None, agent_name: str = "Autonomous Kernel Agent", governing_node_id: int = None):
         try:
             if label.upper() not in ['WORKFLOW', 'REGULATION', 'AGENT']:
                 raise ValueError(f"UNAUTHORIZED GRAPH NODE LABEL: {label}. Label must be WORKFLOW, REGULATION, or AGENT.")
@@ -316,7 +460,7 @@ class ShieldGateway:
                                 SELECT id FROM graph_edges 
                                 WHERE (source_id = :source_id AND target_id = :target_id) 
                                    OR (source_id = :target_id AND target_id = :source_id)
-                            """), {"source_id": node_id, "target_id": target_id}).fetchone()
+                             """), {"source_id": node_id, "target_id": target_id}).fetchone()
                             
                             if not edge_check:
                                 conn.execute(text("""
@@ -324,12 +468,28 @@ class ShieldGateway:
                                     VALUES (:source_id, :target_id, :edge_type, '{}')
                                 """), {"source_id": node_id, "target_id": target_id, "edge_type": edge_type.upper()})
                 conn.commit()
+            
+            # Log graph evolution to audit ledger
+            self.log_audit_event(
+                agent_name=agent_name,
+                action_type="GRAPH_EVOLUTION",
+                action_details=json.dumps({
+                    "label": label,
+                    "name": name,
+                    "description": description,
+                    "skill_markdown": skill_markdown,
+                    "properties": properties,
+                    "target_edges": target_edges
+                }),
+                governing_node_id=governing_node_id
+            )
+            
             return {"status": "success", "message": msg}
         except Exception as e:
             return {"error": f"Graph Evolution Blocked: {str(e)}"}
 
     # --- H. EVOLUTIONARY VECTOR MUTATION GATEWAY ---
-    def execute_vector_mutation(self, node_id: int, source_type: str, text_content: str):
+    def execute_vector_mutation(self, node_id: int, source_type: str, text_content: str, agent_name: str = "Autonomous Kernel Agent", governing_node_id: int = None):
         try:
             if source_type.upper() not in ['LAW', 'EMAIL', 'INTERNAL_DOC', 'POLICY']:
                 raise ValueError(f"UNAUTHORIZED VECTOR SOURCE TYPE: {source_type}. Must be LAW, EMAIL, INTERNAL_DOC, or POLICY.")
@@ -370,6 +530,18 @@ class ShieldGateway:
                     "embedding": vector_json
                 })
                 conn.commit()
+            
+            # Log vector evolution to audit ledger
+            self.log_audit_event(
+                agent_name=agent_name,
+                action_type="VECTOR_EVOLUTION",
+                action_details=json.dumps({
+                    "node_id": node_id,
+                    "source_type": source_type,
+                    "text_content": text_content
+                }),
+                governing_node_id=governing_node_id
+            )
             
             return {
                 "status": "success", 

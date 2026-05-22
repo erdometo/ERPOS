@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Shield, Play, Layers, MessageSquare, Database, ArrowRight, CheckCircle2, AlertCircle, Cpu } from 'lucide-react';
+import { Terminal, Shield, Play, Layers, MessageSquare, Database, ArrowRight, CheckCircle2, AlertCircle, Cpu, Network, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface TraceLog {
   agent: string;
@@ -89,10 +89,21 @@ const DynamicRenderer: React.FC<{
 export default function App() {
   const [question, setQuestion] = useState("Show me today's anomalous transactions");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ui' | 'trace' | 'data' | 'schema'>('ui');
+  const [activeTab, setActiveTab] = useState<'ui' | 'trace' | 'schema' | 'ledger' | 'data'>('ui');
   const [response, setResponse] = useState<QueryResponse | null>(null);
   const [schema, setSchema] = useState<string>('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [ledgerData, setLedgerData] = useState<{
+    is_verified: boolean;
+    tampered_indices: number[];
+    events: any[];
+  } | null>(null);
+  const [graphData, setGraphData] = useState<{
+    nodes: any[];
+    edges: any[];
+  } | null>(null);
+  const [selectedGraphNode, setSelectedGraphNode] = useState<any>(null);
+  const [isVerifyingLedger, setIsVerifyingLedger] = useState(false);
 
   // Fetch Database Schema from server
   const fetchSchema = async () => {
@@ -102,6 +113,31 @@ export default function App() {
       setSchema(data.schema);
     } catch (err) {
       console.error("Failed to retrieve schema info", err);
+    }
+  };
+
+  // Fetch Database Ledger from server
+  const fetchLedger = async (showSpinner = false) => {
+    if (showSpinner) setIsVerifyingLedger(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/ledger');
+      const data = await res.json();
+      setLedgerData(data);
+    } catch (err) {
+      console.error("Failed to retrieve ledger info", err);
+    } finally {
+      if (showSpinner) setIsVerifyingLedger(false);
+    }
+  };
+
+  // Fetch Governance Graph from server
+  const fetchGraph = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/graph');
+      const data = await res.json();
+      setGraphData(data);
+    } catch (err) {
+      console.error("Failed to retrieve graph info", err);
     }
   };
 
@@ -117,8 +153,10 @@ export default function App() {
       const data = await res.json();
       setResponse(data);
       setActiveTab('ui');
-      // Proactively refresh schema definitions in case of evolutionary DDL execution
+      // Proactively refresh schema, ledger, and graph definitions in case of evolutionary changes
       fetchSchema();
+      fetchLedger();
+      fetchGraph();
     } catch (err) {
       console.error(err);
       setNotification({ message: 'Failed to connect to ERP OS Kernel backend.', type: 'error' });
@@ -133,6 +171,8 @@ export default function App() {
     const timer = setTimeout(() => {
       handleQuery("Show me today's anomalous transactions");
       fetchSchema();
+      fetchLedger();
+      fetchGraph();
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
@@ -140,19 +180,43 @@ export default function App() {
   // Handle action triggers from dynamic UI
   const handleAction = async (actionId: string, params: any) => {
     try {
-      const res = await fetch('http://localhost:8000/api/action', {
+      let body: any = {};
+      if (actionId === 'approve_waiver') {
+        body = {
+          query: "UPDATE orders SET status = 'approved' WHERE id = :id",
+          params: { id: params.order_id },
+          governing_node_id: 1 // High Value Transaction Policy governance node
+        };
+      } else if (actionId === 'reorder_stock') {
+        body = {
+          query: "UPDATE products SET stock_quantity = stock_quantity + 50 WHERE name = :name",
+          params: { name: params.product_name },
+          governing_node_id: 3 // Automated Inventory Replenishment node
+        };
+      } else {
+        // Generalized action query execution passed from the sandbox
+        body = {
+          query: params?.query || actionId,
+          params: params?.params || params || {},
+          governing_node_id: params?.governing_node_id
+        };
+      }
+
+      const res = await fetch('http://localhost:8000/api/action/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action_id: actionId, params }),
+        body: JSON.stringify(body),
       });
       const result = await res.json();
       
-      if (result.status === 'success') {
-        setNotification({ message: result.message, type: 'success' });
-        // Re-run query to refresh database state in UI
+      if (res.ok) {
+        setNotification({ message: result.message || 'Action executed successfully.', type: 'success' });
+        // Re-run query to refresh database state in UI, as well as ledger & graph
         handleQuery(question);
+        fetchLedger();
+        fetchGraph();
       } else {
-        setNotification({ message: result.message, type: 'error' });
+        setNotification({ message: result.detail || result.message || 'Action execution failed.', type: 'error' });
       }
     } catch (err) {
       console.error(err);
@@ -329,6 +393,21 @@ export default function App() {
                   <ArrowRight className="w-3.5 h-3.5 text-amber-800 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
                 </button>
               </div>
+
+              {/* Cryptographic Compliance Chain */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-emerald-400/80 uppercase tracking-widest font-bold font-mono">Compliance & Ledger Verification</span>
+                <button
+                  onClick={() => {
+                    setActiveTab('ledger');
+                    fetchLedger(true);
+                  }}
+                  className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-emerald-400 hover:text-emerald-200 border-emerald-950/30 hover:border-emerald-500/20 transition-all flex items-center justify-between group"
+                >
+                  <span>Verify Ledger Cryptography</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-emerald-800 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -346,6 +425,7 @@ export default function App() {
                 {[
                   { id: 'ui', label: 'Generated UI', icon: MessageSquare },
                   { id: 'trace', label: 'Agent Log Stream', icon: Terminal },
+                  { id: 'ledger', label: 'Ledger Audit', icon: Shield },
                   { id: 'schema', label: 'Schema Explorer', icon: Layers },
                   { id: 'data', label: 'Raw Payload', icon: Database },
                 ].map((tab) => {
@@ -429,20 +509,355 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* TAB 3: SCHEMA EXPLORER */}
+                  {/* TAB 3: SCHEMA EXPLORER (UPGRADED) */}
                   {activeTab === 'schema' && (
-                    <div className="space-y-4 font-mono">
-                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>Authoritative SQLite Ledger Schema Map</span>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
+                          <Network className="w-4 h-4 text-indigo-400 animate-pulse" />
+                          <span>Governance Topology & SQL Schema Map</span>
+                        </div>
                       </div>
-                      <div className="p-5 font-mono text-xs text-emerald-400/90 bg-black/40 border border-slate-900 rounded-xl max-h-[450px] overflow-y-auto whitespace-pre-wrap leading-relaxed shadow-inner">
-                        {schema ? (
-                          schema
-                        ) : (
-                          <span className="text-slate-500 italic">Extracting schema maps from SQLite...</span>
-                        )}
+
+                      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                        {/* Interactive Graph (xl:col-span-7) */}
+                        <div className="xl:col-span-7 space-y-4">
+                          <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 shadow-inner flex flex-col relative min-h-[360px]">
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">Live Active Directory Graph Nodes</span>
+                            
+                            {graphData && graphData.nodes && graphData.nodes.length > 0 ? (
+                              <svg viewBox="0 0 500 320" className="w-full h-[280px] bg-black/35 rounded-xl border border-slate-950/50">
+                                <defs>
+                                  <marker id="arrow-governs" viewBox="0 0 10 10" refX="16" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f43f5e" />
+                                  </marker>
+                                  <marker id="arrow-depends" viewBox="0 0 10 10" refX="16" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#818cf8" />
+                                  </marker>
+                                  <marker id="arrow-default" viewBox="0 0 10 10" refX="16" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6" />
+                                  </marker>
+                                </defs>
+
+                                {/* Render Edges */}
+                                {(() => {
+                                  // Base coords mapping
+                                  const baseCoords: { [key: number]: { x: number; y: number } } = {
+                                    1: { x: 250, y: 220 },
+                                    2: { x: 120, y: 80 },
+                                    3: { x: 380, y: 80 },
+                                  };
+                                  
+                                  const nodeMap: { [key: number]: { x: number; y: number } } = {};
+                                  graphData.nodes.forEach((n, idx) => {
+                                    if (baseCoords[n.id]) {
+                                      nodeMap[n.id] = baseCoords[n.id];
+                                    } else {
+                                      const angle = (idx * 2 * Math.PI) / (graphData.nodes.length || 1);
+                                      nodeMap[n.id] = {
+                                        x: 250 + 130 * Math.cos(angle),
+                                        y: 150 + 90 * Math.sin(angle)
+                                      };
+                                    }
+                                  });
+
+                                  return (
+                                    <>
+                                      {graphData.edges.map((edge) => {
+                                        const src = nodeMap[edge.source];
+                                        const tgt = nodeMap[edge.target];
+                                        if (!src || !tgt) return null;
+                                        
+                                        const markerId = edge.type === 'GOVERNS' ? 'arrow-governs' : edge.type === 'DEPENDS_ON' ? 'arrow-depends' : 'arrow-default';
+                                        const isGovern = edge.type === 'GOVERNS';
+                                        
+                                        return (
+                                          <g key={edge.id} className="group">
+                                            <line
+                                              x1={src.x}
+                                              y1={src.y}
+                                              x2={tgt.x}
+                                              y2={tgt.y}
+                                              stroke={isGovern ? '#f43f5e' : '#818cf8'}
+                                              strokeWidth={isGovern ? 2 : 1.5}
+                                              strokeDasharray={edge.type === 'DEPENDS_ON' ? '4 4' : undefined}
+                                              markerEnd={`url(#${markerId})`}
+                                              className="transition-all duration-300 group-hover:stroke-indigo-400"
+                                            />
+                                            <text
+                                              x={(src.x + tgt.x) / 2}
+                                              y={(src.y + tgt.y) / 2 - 6}
+                                              textAnchor="middle"
+                                              fill="#475569"
+                                              className="text-[8px] font-mono font-bold select-none pointer-events-none"
+                                            >
+                                              {edge.type}
+                                            </text>
+                                          </g>
+                                        );
+                                      })}
+
+                                      {/* Render Nodes */}
+                                      {graphData.nodes.map((node) => {
+                                        const pos = nodeMap[node.id];
+                                        const isSelected = selectedGraphNode?.id === node.id;
+                                        const isRegulation = node.label === 'regulation';
+                                        
+                                        return (
+                                          <g 
+                                            key={node.id} 
+                                            className="cursor-pointer group"
+                                            onClick={() => setSelectedGraphNode(node)}
+                                          >
+                                            {/* Glow filter selection ring */}
+                                            {isSelected && (
+                                              <circle
+                                                cx={pos.x}
+                                                cy={pos.y}
+                                                r="28"
+                                                fill="none"
+                                                stroke={isRegulation ? '#f43f5e' : '#6366f1'}
+                                                strokeWidth="1.5"
+                                                className="animate-ping opacity-25"
+                                              />
+                                            )}
+                                            <circle
+                                              cx={pos.x}
+                                              cy={pos.y}
+                                              r="22"
+                                              fill={isRegulation ? '#31101b' : '#1e1b4b'}
+                                              stroke={isSelected ? '#fff' : isRegulation ? '#f43f5e' : '#6366f1'}
+                                              strokeWidth={isSelected ? 2.5 : 2}
+                                              className="transition-all duration-300 group-hover:scale-105 group-hover:stroke-white"
+                                            />
+                                            {/* Node label code e.g. N1, N2 */}
+                                            <text
+                                              x={pos.x}
+                                              y={pos.y + 4}
+                                              textAnchor="middle"
+                                              fill="#fff"
+                                              className="text-[10px] font-mono font-extrabold select-none pointer-events-none"
+                                            >
+                                              N{node.id}
+                                            </text>
+                                            {/* Tooltip label below */}
+                                            <text
+                                              x={pos.x}
+                                              y={pos.y + 34}
+                                              textAnchor="middle"
+                                              fill={isSelected ? '#fff' : '#64748b'}
+                                              className="text-[9px] font-sans font-bold select-none pointer-events-none"
+                                            >
+                                              {node.name.length > 20 ? node.name.slice(0, 17) + '...' : node.name}
+                                            </text>
+                                          </g>
+                                        );
+                                      })}
+                                    </>
+                                  );
+                                })()}
+                              </svg>
+                            ) : (
+                              <div className="flex-1 flex items-center justify-center text-slate-500 italic text-xs">
+                                Loading graph topology details...
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Node details if selected */}
+                          {selectedGraphNode && (
+                            <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 space-y-3 animate-fadeIn">
+                              <div className="flex justify-between items-start gap-4">
+                                <div>
+                                  <span className={`px-2 py-0.5 border rounded text-[9px] font-bold uppercase tracking-wider font-mono ${
+                                    selectedGraphNode.label === 'regulation' 
+                                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' 
+                                      : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                  }`}>
+                                    {selectedGraphNode.label}
+                                  </span>
+                                  <h4 className="text-sm font-bold text-slate-200 mt-1.5">{selectedGraphNode.name}</h4>
+                                  <p className="text-xs text-slate-400 mt-0.5">{selectedGraphNode.description}</p>
+                                </div>
+                                <button 
+                                  onClick={() => setSelectedGraphNode(null)}
+                                  className="text-[10px] text-slate-500 hover:text-slate-300 font-semibold"
+                                >
+                                  Close
+                                </button>
+                              </div>
+
+                              <div className="space-y-1.5 pt-2 border-t border-slate-900">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase font-mono">Bound rules (skill.md)</span>
+                                <pre className="font-mono text-[10px] text-emerald-400/90 bg-black/40 p-3 rounded-lg overflow-y-auto max-h-[140px] whitespace-pre-wrap leading-normal border border-slate-900">
+                                  {selectedGraphNode.skill_markdown}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* SQL Tabular Map (xl:col-span-5) */}
+                        <div className="xl:col-span-5 space-y-4">
+                          <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 shadow-inner flex flex-col h-full">
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">SQLite Database Tables Schema</span>
+                            <pre className="font-mono text-[11px] text-emerald-400/90 bg-black/35 p-4 rounded-xl overflow-y-auto max-h-[460px] whitespace-pre-wrap leading-relaxed border border-slate-950/50">
+                              {schema || "Extracting tabular schema from database..."}
+                            </pre>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: LEDGER AUDIT */}
+                  {activeTab === 'ledger' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider">
+                          <Shield className="w-4 h-4 text-rose-400" />
+                          <span>Append-Only Cryptographic Audit Ledger</span>
+                        </div>
+                        <button
+                          onClick={() => fetchLedger(true)}
+                          disabled={isVerifyingLedger}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-300 font-medium active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isVerifyingLedger ? 'animate-spin' : ''}`} />
+                          {isVerifyingLedger ? 'Verifying Integrity...' : 'Verify Ledger Integrity'}
+                        </button>
+                      </div>
+
+                      {ledgerData ? (
+                        <div className="space-y-6">
+                          {/* Cryptographic Verification Status Banner */}
+                          {ledgerData.is_verified ? (
+                            <div className="bg-emerald-950/10 border border-emerald-500/20 p-5 rounded-2xl backdrop-blur-md shadow-lg flex items-start gap-4">
+                              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl shrink-0">
+                                <Shield className="w-6 h-6 text-emerald-400 animate-pulse" />
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-emerald-400">Cryptographic Verification Succeeded</h3>
+                                <p className="text-xs text-slate-300">
+                                  All audit records are verified. The SHA-256 block hash chain is structurally integrated. No unauthorized modifications detected.
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-rose-950/15 border border-rose-500/30 p-5 rounded-2xl backdrop-blur-md shadow-lg flex items-start gap-4 animate-shake">
+                              <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl shrink-0">
+                                <AlertTriangle className="w-6 h-6 text-rose-500 animate-bounce" />
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-rose-400">Ledger Cryptographic Verification Failed!</h3>
+                                <p className="text-xs text-slate-300">
+                                  WARNING: Unauthorized modifications or database tampering detected outside the consensus pipeline. 
+                                  Tampered row indices flagged: <strong className="text-rose-400">{ledgerData.tampered_indices.join(', ')}</strong>.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Timeline of block mutations */}
+                          <div className="relative border-l border-slate-800 ml-5 pl-7 space-y-6">
+                            {ledgerData.events && ledgerData.events.length > 0 ? (
+                              ledgerData.events.map((event) => {
+                                const isTampered = ledgerData.tampered_indices.includes(event.id);
+                                
+                                return (
+                                  <div key={event.id} className="relative group">
+                                    {/* Link indicator */}
+                                    <div className={`absolute -left-[35px] top-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                                      isTampered 
+                                        ? 'bg-rose-950 border-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' 
+                                        : 'bg-slate-950 border-slate-700 group-hover:border-emerald-500/50'
+                                    }`}>
+                                      {isTampered ? (
+                                        <AlertCircle className="w-2.5 h-2.5 text-rose-500" />
+                                      ) : (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-emerald-500"></div>
+                                      )}
+                                    </div>
+
+                                    {/* Event Card */}
+                                    <div className={`bg-slate-900/20 border rounded-xl p-5 shadow transition-all duration-300 hover:bg-slate-900/30 ${
+                                      isTampered 
+                                        ? 'border-rose-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-rose-950/5' 
+                                        : 'border-slate-800/80 hover:border-slate-700/80'
+                                    }`}>
+                                      {/* Card header */}
+                                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono text-[10px] font-bold text-slate-500">BLOCK #{event.id}</span>
+                                          <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${
+                                            event.action_type === 'GENESIS'
+                                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                              : event.action_type === 'DB_INITIALIZATION'
+                                                ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                                                : event.action_type === 'SCHEMA_EVOLUTION'
+                                                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                                  : 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                                          }`}>
+                                            {event.action_type}
+                                          </span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-500 font-mono">{event.timestamp}</span>
+                                      </div>
+
+                                      {/* Action Agent and Details */}
+                                      <div className="space-y-2 mb-4">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[11px] text-slate-400 font-semibold">Agent Executor:</span>
+                                          <span className="text-xs font-bold text-slate-200">{event.agent_name}</span>
+                                        </div>
+                                        {event.governing_node_id && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[11px] text-slate-400 font-semibold">Governance Node:</span>
+                                            <span className="px-1.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded font-semibold text-[9px] font-mono">
+                                              Node #{event.governing_node_id}
+                                            </span>
+                                          </div>
+                                        )}
+                                        <div className="mt-1 bg-black/40 rounded-lg p-3 border border-slate-900/60 shadow-inner">
+                                          <span className="text-[9px] text-slate-500 font-bold uppercase block font-mono mb-1">Payload Details</span>
+                                          <pre className="text-xs text-indigo-200 font-mono whitespace-pre-wrap break-all leading-normal">
+                                            {typeof event.action_details === 'object' 
+                                              ? JSON.stringify(event.action_details, null, 2) 
+                                              : event.action_details}
+                                          </pre>
+                                        </div>
+                                      </div>
+
+                                      {/* Block Linkage Hashes */}
+                                      <div className="pt-3 border-t border-slate-900 grid grid-cols-1 md:grid-cols-2 gap-3 text-[9px] font-mono">
+                                        <div className="space-y-0.5">
+                                          <span className="text-slate-500 font-semibold uppercase">PREV BLOCK LINK HASH:</span>
+                                          <div className="text-slate-400 break-all bg-black/25 px-2 py-1 rounded border border-slate-950/40 select-all" title={event.prev_hash}>
+                                            {event.prev_hash.slice(0, 16)}...{event.prev_hash.slice(-16)}
+                                          </div>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                          <span className="text-slate-500 font-semibold uppercase">BLOCK SHA-256 SIGNATURE:</span>
+                                          <div className={`${isTampered ? 'text-rose-400 bg-rose-950/10 border-rose-500/20' : 'text-emerald-400 bg-emerald-950/5 border-emerald-500/10'} break-all px-2 py-1 rounded border select-all`} title={event.row_hash}>
+                                            {event.row_hash.slice(0, 16)}...{event.row_hash.slice(-16)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-slate-500 italic text-xs py-8 text-center">No ledger blocks found.</div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col justify-center items-center py-20 gap-3">
+                          <div className="w-8 h-8 border-2 border-t-rose-500 border-rose-500/20 rounded-full animate-spin"></div>
+                          <span className="text-xs text-slate-500 italic">Querying ledger database states...</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
