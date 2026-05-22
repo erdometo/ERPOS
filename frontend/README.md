@@ -28,6 +28,29 @@ The terminal is designed with sleek glassmorphic aesthetics, neon indicators, an
 ### 4. Interactive Suggestion Chips
 Includes shortcuts to trigger compliance audits, evolutionary schema creations, infinite loop tests (verifying FinOps breakers), and direct cryptographic ledger verifications.
 
+```mermaid
+graph TD
+    Code["Agent JSX Code Payload"]
+    Babel["In-Browser Babel Standalone Compiler"]
+    Eval["Function Context Evaluation"]
+    Component["Rendered React Component"]
+    Action["User Interacts with UI Action"]
+    API["POST /api/action/execute"]
+
+    Code --> Babel
+    Babel -->|Transpiled JS Code| Eval
+    Eval -->|Dynamic React Element| Component
+    Component -->|onAction Callback Triggered| Action
+    Action -->|Formulate DML Statement| API
+    
+    style Code fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style Babel fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style Eval fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style Component fill:#31101b,stroke:#f43f5e,stroke-width:2px,color:#fff
+    style Action fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style API fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#fff
+```
+
 ---
 
 ## 🛠️ Technology Stack

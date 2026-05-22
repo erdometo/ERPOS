@@ -24,32 +24,25 @@ The system is built on a hybrid database foundation managed within a unified gat
 *   **Vector (Semantic Context)**: Text chunks (e.g., corporate emails, law excerpts) are vectorized and mapped explicitly to Graph Nodes, providing hyper-localized context to the executing agent.
 *   **Cryptographic Ledger**: An `audit_ledger` table recording every state mutation, structured as a cryptographic block chain where each block signs the current payload and links to the previous block's SHA-256 hash.
 
-```
-+-------------------------------------------------------------------------------+
-|                           OmniGate Frontend UI                                |
-+-------------------------------------------------------------------------------+
-                                        |
-                 Natural Language       |  Ephemeral React JSX
-                  Command Stream        |  & Ledger Verification Data
-                                        v
-+-------------------------------------------------------------------------------+
-|                            FastAPI Agentic Kernel                             |
-+-------------------------------------------------------------------------------+
-                                        |
-                 1. Introspection       | 2. Pydantic-Validated Query Execution
-                                        v
-+-------------------------------------------------------------------------------+
-|                    Multi-Model DB Shield & Sandbox Gateway                    |
-|                                                                               |
-|   - Read-only SQL Gateway   - Additive DDL Agent      - Ledger Cryptography   |
-|   - SVG Graph Topology      - Vector Search Index     - FinOps Circuit Breaker|
-+-------------------------------------------------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|                      Unified SQLite Database Engine                           |
-|       (Tabular Data  +  Workflow Graph Nodes  +  Vector Partitions)           |
-+-------------------------------------------------------------------------------+
+```mermaid
+graph TD
+    UI["OmniGate Frontend UI"]
+    Kernel["FastAPI Agentic Kernel"]
+    Shield["Multi-Model DB Shield & Sandbox Gateway"]
+    DB[("Unified SQLite Database Engine (SQL + Graph + Vector)")]
+
+    UI -->|Natural Language Commands| Kernel
+    Kernel -->|Introspection Loop| Shield
+    Kernel -->|Pydantic-Validated Query| Shield
+    Shield -->|Restricted SQL & Additive DDL| DB
+    Shield -->|Append-Only Block Chain Signatures| DB
+    DB -->|State Payloads & Integrity Flags| Shield
+    Shield -->|Bespoke React JSX & Ledger Timelines| UI
+
+    style UI fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style Kernel fill:#31101b,stroke:#f43f5e,stroke-width:2px,color:#fff
+    style Shield fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style DB fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#fff
 ```
 
 ---

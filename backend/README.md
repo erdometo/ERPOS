@@ -15,6 +15,25 @@ Acts as a sandbox proxy between executing AI agents and the system database, enf
     `row_hash = SHA256(id + timestamp + action_type + agent_name + action_details + governing_node_id + prev_hash)`
 *   **Integrity Auditing Engine**: Iterates over the entire `audit_ledger` history, verifying that the hashes match and that no out-of-band updates have broken the blockchain structure. Returns flagged indices upon detecting anomalies.
 
+```mermaid
+graph LR
+    subgraph Ledger Hash Chain Validation
+        B0["Block #0 (Genesis)<br/>Prev Hash: '0000...0000'"]
+        B1["Block #1 (Initialization)<br/>Prev Hash: Hash(B0)"]
+        B2["Block #2 (Action Mutation)<br/>Prev Hash: Hash(B1)"]
+        B3["Block #3 (Tampered Node)<br/>Prev Hash: Hash(B2)"]
+        
+        B0 -->|Integrity Verified| B1
+        B1 -->|Integrity Verified| B2
+        B2 -.-x|Broken Chain / Hash Mismatch| B3
+    end
+
+    style B0 fill:#0f172a,stroke:#34d399,stroke-width:2px,color:#34d399
+    style B1 fill:#0f172a,stroke:#34d399,stroke-width:2px,color:#34d399
+    style B2 fill:#0f172a,stroke:#34d399,stroke-width:2px,color:#34d399
+    style B3 fill:#31101b,stroke:#f43f5e,stroke-width:2px,color:#f43f5e
+```
+
 ### 2. Autonomous ReAct Execution Engine (`main.py`)
 Orchestrates agent reasoning cycles and provides APIs for the frontend:
 *   **ReAct Loop Wrapper**: Implements Thought-Action-Observation reasoning. Resolves user instructions against the database, policy vectors, and workflow rules.
