@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from pydantic import BaseModel, Field, field_validator
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 
 # Determine active path
@@ -241,13 +241,13 @@ class ShieldGateway:
     # --- C. VECTOR GATEWAY (Global Semantic Search) ---
     def vector_search(self, query_text: str, limit=2):
         try:
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
             with self.engine.connect() as conn:
                 result = conn.execute(text("SELECT source_type, node_id, text_content, embedding FROM vector_partitions"))
                 rows = result.fetchall()
                 
                 if api_key:
-                    embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+                    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2", google_api_key=api_key)
                     query_vector = embeddings_model.embed_query(query_text)
                 else:
                     query_vector = [0.1, 0.1, 0.1]
@@ -282,7 +282,7 @@ class ShieldGateway:
     # --- D. LOCALIZED VECTOR GATEWAY (Node-Level Semantic Search) ---
     def node_vector_search(self, node_id: int, query_text: str, limit=2):
         try:
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
             with self.engine.connect() as conn:
                 result = conn.execute(
                     text("SELECT source_type, text_content, embedding FROM vector_partitions WHERE node_id = :node_id"),
@@ -294,7 +294,7 @@ class ShieldGateway:
                     return []
                 
                 if api_key:
-                    embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+                    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2", google_api_key=api_key)
                     query_vector = embeddings_model.embed_query(query_text)
                 else:
                     query_vector = [0.1, 0.1, 0.1]
@@ -497,9 +497,9 @@ class ShieldGateway:
             if not text_content.strip():
                 raise ValueError("Text content cannot be empty.")
             
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
             if api_key:
-                embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+                embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2", google_api_key=api_key)
                 vector = embeddings_model.embed_query(text_content)
             else:
                 vector = [0.1, 0.1, 0.1]

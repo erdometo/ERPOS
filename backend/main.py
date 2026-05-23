@@ -13,6 +13,13 @@ from middleware import ShieldGateway
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(CURRENT_DIR, ".env"))
 
+def get_content_str(res_obj) -> str:
+    if hasattr(res_obj, "content"):
+        res_obj = res_obj.content
+    if isinstance(res_obj, list):
+        return "".join([part.get("text", "") if isinstance(part, dict) else str(part) for part in res_obj])
+    return str(res_obj)
+
 app = FastAPI(title="Agentic ERP OS Kernel")
 
 # Configure CORS so the React frontend can query our backend
@@ -42,21 +49,21 @@ class ActionExecuteRequest(BaseModel):
 
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
 def run_real_llm_agent(question: str):
-    from langchain_openai import ChatOpenAI
+    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
     
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY is not configured.")
+        raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY is not configured.")
         
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.1, openai_api_key=api_key)
+    llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, google_api_key=api_key)
     trace = []
     cb = CircuitBreaker(max_cycles=6)
     
     trace.append({
         "agent": "Kernel Supervisor",
         "action": "Initialize Autonomous ReAct Loop",
-        "details": f"Spawning ReAct Agent to resolve ERP request: '{question}' using gpt-4o."
+        "details": f"Spawning ReAct Agent to resolve ERP request: '{question}' using gemini-3.5-flash."
     })
     
     # Introspect schema initially
@@ -134,12 +141,13 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
         history_str = "\n".join(history_log) if history_log else "No history yet."
         
         # Invoke LLM
-        res = chain.invoke({
+        res_obj = chain.invoke({
             "tools": tools_description,
             "schema": current_schema,
             "question": question,
             "history": history_str
-        }).content.strip()
+        })
+        res = get_content_str(res_obj).strip()
         
         # Parse Thought, Action, Arguments
         thought = ""
@@ -319,12 +327,13 @@ Include:
 - Exquisite design aesthetics: zinc-950 dark styling, soft colorful borders (emerald, rose, indigo, or amber depending on context), nice glassmorphic card glows, smooth lists, and clear typography.
 
 Return ONLY raw, valid React JSX code wrapped in the following signature:
-const EphemeralDashboard = ({ data, onAction }) => { ... }; return EphemeralDashboard;"""),
+const EphemeralDashboard = ({{ data, onAction }}) => {{ ... }}; return EphemeralDashboard;"""),
         ("user", "Compile the custom React UI dashboard for this execution result: {payload}")
     ])
     
     ui_chain = ui_prompt | llm
-    ui_code = ui_chain.invoke({"payload": json.dumps(audit_data)}).content.strip()
+    ui_res = ui_chain.invoke({"payload": json.dumps(audit_data)})
+    ui_code = get_content_str(ui_res).strip()
     
     if ui_code.startswith("```"):
         ui_code = ui_code.split("```")[1]
@@ -1215,7 +1224,7 @@ async def execute_query(req: QueryRequest):
             action_details=json.dumps({"question": req.question})
         )
         
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         # If API KEY is present, run the true LLM agent execution
         if api_key:
             try:
