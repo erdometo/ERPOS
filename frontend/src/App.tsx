@@ -187,16 +187,38 @@ export default function App() {
     try {
       let body: any = {};
       if (actionId === 'approve_waiver') {
+        let orderId = null;
+        if (params !== null && params !== undefined) {
+          if (typeof params === 'object') {
+            orderId = params.order_id ?? params.id ?? Object.values(params)[0];
+          } else {
+            orderId = params;
+          }
+        }
         body = {
           query: "UPDATE orders SET status = 'approved' WHERE id = :id",
-          params: { id: params.order_id },
-          governing_node_id: 1 // High Value Transaction Policy governance node
+          params: { id: orderId },
+          governing_node_id: 2 // High Value Transaction Policy governance node
         };
       } else if (actionId === 'reorder_stock') {
+        let productName = null;
+        if (params !== null && params !== undefined) {
+          if (typeof params === 'object') {
+            productName = params.product_name ?? params.name ?? Object.values(params)[0];
+          } else {
+            productName = params;
+          }
+        }
         body = {
           query: "UPDATE products SET stock_quantity = stock_quantity + 50 WHERE name = :name",
-          params: { name: params.product_name },
+          params: { name: productName },
           governing_node_id: 3 // Automated Inventory Replenishment node
+        };
+      } else if (actionId === 'flag_anomalies' || actionId === 'flag_all') {
+        body = {
+          query: "UPDATE orders SET status = 'flagged' WHERE total_amount > 500",
+          params: {},
+          governing_node_id: 2 // High Value Transaction Policy governance node
         };
       } else {
         // Generalized action query execution passed from the sandbox
