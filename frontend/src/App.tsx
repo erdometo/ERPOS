@@ -37,6 +37,9 @@ const DynamicRenderer: React.FC<{
       // @ts-ignore
       const compiled = window.Babel.transform(code, {
         presets: ['react'],
+        parserOpts: {
+          allowReturnOutsideFunction: true
+        }
       }).code || '';
 
       // Strip ES6 export statements which are not valid inside a function evaluator block
