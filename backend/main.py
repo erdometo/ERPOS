@@ -49,21 +49,31 @@ class ActionExecuteRequest(BaseModel):
 
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
 def run_real_llm_agent(question: str):
-    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
     
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY is not configured.")
+    custom_id = os.getenv("CUSTOM_CLIENT_ID")
+    custom_secret = os.getenv("CUSTOM_CLIENT_SECRET")
+    custom_model = os.getenv("CUSTOM_MODEL_NAME", "gemini-3-flash")
+    
+    if custom_id and custom_secret:
+        from custom_client import ChatCustom
+        llm = ChatCustom(client_id=custom_id, client_secret=custom_secret, model_name=custom_model, temperature=0.1)
+        model_display = f"Custom LLM ({custom_model})"
+    else:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY or CUSTOM client credentials are not configured.")
+        llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, google_api_key=api_key)
+        model_display = "gemini-3.5-flash"
         
-    llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, google_api_key=api_key)
     trace = []
     cb = CircuitBreaker(max_cycles=6)
     
     trace.append({
         "agent": "Kernel Supervisor",
         "action": "Initialize Autonomous ReAct Loop",
-        "details": f"Spawning ReAct Agent to resolve ERP request: '{question}' using gemini-3.5-flash."
+        "details": f"Spawning ReAct Agent to resolve ERP request: '{question}' using {model_display}."
     })
     
     # Introspect schema initially
@@ -323,7 +333,7 @@ Include:
 - A beautiful header showing the final outcome of the agent's query.
 - A visual "Multi-Agent Trajectory Timeline" summarizing the thoughts, actions, and observations taken during the ReAct loop.
 - A visual breakdown of any evolved database structures (e.g. newly created SQL columns/tables, new Graph skill nodes, or vectorized documents).
-- Action buttons if anomalies or reorders are present (e.g. onAction("approve_waiver", { order_id: x }) or onAction("reorder_stock", { product_name: y })).
+- Action buttons if anomalies or reorders are present (e.g. onAction("approve_waiver", {{ order_id: x }}) or onAction("reorder_stock", {{ product_name: y }})).
 - Exquisite design aesthetics: zinc-950 dark styling, soft colorful borders (emerald, rose, indigo, or amber depending on context), nice glassmorphic card glows, smooth lists, and clear typography.
 
 Return ONLY raw, valid React JSX code wrapped in the following signature:
@@ -1225,8 +1235,11 @@ async def execute_query(req: QueryRequest):
         )
         
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        # If API KEY is present, run the true LLM agent execution
-        if api_key:
+        custom_id = os.getenv("CUSTOM_CLIENT_ID")
+        custom_secret = os.getenv("CUSTOM_CLIENT_SECRET")
+        
+        # If API configuration is present, run the true LLM agent execution
+        if (custom_id and custom_secret) or api_key:
             try:
                 result = run_real_llm_agent(req.question)
                 return result

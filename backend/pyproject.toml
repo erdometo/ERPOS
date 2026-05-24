@@ -1,0 +1,62 @@
+# ─── pyproject.toml — ERPOS Backend ────────────────────────────────────────
+# Centralises Black, Ruff, and isort configuration so the CLI and IDE
+# extension both use identical settings.
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | __pycache__
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+exclude = [
+  ".git",
+  "__pycache__",
+  "venv",
+  ".venv",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "SIM", # flake8-simplify
+]
+ignore = [
+  "E501",  # line too long (handled by Black)
+  "B008",  # do not perform function calls in default args (FastAPI uses Depends)
+  "N803",  # argument name should be lowercase (LangChain base classes use PascalCase)
+  "N806",  # variable in function should be lowercase
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend"]
+force-sort-within-sections = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["backend"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["venv/", "__pycache__/"]
