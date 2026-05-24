@@ -37,11 +37,16 @@ const DynamicRenderer: React.FC<{
       // @ts-ignore
       const compiled = window.Babel.transform(code, {
         presets: ['react'],
-      }).code;
+      }).code || '';
+
+      // Strip ES6 export statements which are not valid inside a function evaluator block
+      const cleanCompiled = compiled
+        .replace(/export\s+default\s+[\w\d_]+;?/g, '')
+        .replace(/export\s+/g, '');
 
       // Safely evaluate code in a function context passing React, data, and onAction
       const renderFn = new Function('React', 'data', 'onAction', `
-        ${compiled}
+        ${cleanCompiled}
         try {
           return EphemeralDashboard;
         } catch(e) {
