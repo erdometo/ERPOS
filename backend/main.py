@@ -1392,8 +1392,8 @@ def try_enqueue_rabbitmq(task_id: str, query: str, role: str, email: str) -> boo
         connection.close()
         print(f"[RabbitMQ] Successfully enqueued task {task_id}", flush=True)
         return True
-    except Exception as e:
-        print(f"[RabbitMQ] Failed to connect/publish, falling back to local queue: {e}", flush=True)
+    except Exception:
+        print("[RabbitMQ] Standalone broker not detected. Falling back to local queue.", flush=True)
         return False
 
 

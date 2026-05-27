@@ -589,8 +589,8 @@ class ShieldGateway:
             print(f"Connecting to Neo4j at {neo4j_uri}...")
             self.graph_adapter = Neo4jGraphAdapter(neo4j_uri, neo4j_user, neo4j_password)
             print("Successfully connected to Neo4j.")
-        except Exception as e:
-            print(f"Failed to connect to Neo4j: {e}. Falling back to local JSON graph database.")
+        except Exception:
+            print("[Neo4j] Standalone server not detected. Falling back to local JSON graph database.", flush=True)
             json_db_path = os.path.join(CURRENT_DIR, "graph_db.json")
             self.graph_adapter = JSONGraphAdapter(json_db_path)
             
