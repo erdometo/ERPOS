@@ -1,4 +1,4 @@
-# 🛡️ OmniGate ERP OS: World-Class Agentic Microservices Kernel
+# 🛡️ OmniGate ERP OS
 
 Welcome to the **OmniGate ERP OS**, a production-grade evolutionary operating system that demonstrates the future of enterprise software: a completely "software-less", UI-less business operating system. In this architecture, autonomous AI agents interact directly with a secure, orchestrated multi-model database gateway, while generating bespoke, ephemeral user interfaces on-the-fly.
 
