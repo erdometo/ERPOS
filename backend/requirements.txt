@@ -8,3 +8,8 @@ sqlparse
 python-dotenv
 fastapi
 uvicorn
+pika
+neo4j
+qdrant-client
+bcrypt
+pyjwt

@@ -160,3 +160,7 @@ erp_database.db
 *.njsproj
 *.sln
 *.sw?
+
+# Local seeded databases
+backend/graph_db.json
+backend/qdrant_db/

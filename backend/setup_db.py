@@ -5,6 +5,10 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timedelta
 import random
+import bcrypt
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 Base = declarative_base()
 
@@ -15,6 +19,7 @@ class User(Base):
     name = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     role = Column(String(20), nullable=False) 
+    password_hash = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     orders = relationship("Order", back_populates="user")
 
@@ -95,6 +100,20 @@ class AuditLedger(Base):
     row_hash = Column(String(64), nullable=False)
 
 
+# ==================== 5. BACKGROUND JOBS (TASKS) LAYER ====================
+class Task(Base):
+    __tablename__ = 'tasks'
+    task_id = Column(String(36), primary_key=True)
+    status = Column(String(20), nullable=False) # 'pending', 'processing', 'completed', 'failed'
+    query = Column(Text, nullable=False)
+    role = Column(String(20), nullable=True)
+    email = Column(String(100), nullable=True)
+    result_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    finished_at = Column(DateTime, nullable=True)
+
+
+
 # ==================== INITIALIZATION & SEEDING ====================
 def init_db(db_path="sqlite:///erp_database.db"):
     engine = create_engine(db_path)
@@ -121,14 +140,26 @@ def seed_data(engine):
     session.query(GraphEdge).delete()
     session.query(VectorPartition).delete()
     session.query(AuditLedger).delete()
+    session.query(Task).delete()
     session.commit()
 
+    # Clear external/fallback Neo4j and Qdrant graph and vector stores
+    try:
+        from middleware import ShieldGateway
+        gateway = ShieldGateway()
+        gateway.clear_graph_and_vector_stores()
+    except Exception as e:
+        print(f"Warning: Could not clear external graph and vector stores: {e}")
+
+
+
     # Seed Tabular SQL
+    hashed_pwd = hash_password("password123")
     users = [
-        User(name="Alice Smith", email="alice@example.com", role="admin"),
-        User(name="Bob Jones", email="bob@example.com", role="employee"),
-        User(name="Charlie Brown", email="charlie@example.com", role="customer"),
-        User(name="Diana Prince", email="diana@example.com", role="customer"),
+        User(name="Alice Smith", email="alice@example.com", role="admin", password_hash=hashed_pwd),
+        User(name="Bob Jones", email="bob@example.com", role="employee", password_hash=hashed_pwd),
+        User(name="Charlie Brown", email="charlie@example.com", role="customer", password_hash=hashed_pwd),
+        User(name="Diana Prince", email="diana@example.com", role="customer", password_hash=hashed_pwd),
     ]
     session.add_all(users)
     

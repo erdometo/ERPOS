@@ -33,13 +33,15 @@ const DynamicRenderer: React.FC<{
         throw new Error("Babel compiler is loading from CDN. Please wait a moment...");
       }
 
+      // Wrap code in a parent function to avoid top-level return issues in Babel parser
+      const wrappedCode = `const __componentWrapper = (React, data, onAction) => {
+        ${code}
+      };`;
+
       // Compile JSX using Babel
       // @ts-ignore
-      const compiled = window.Babel.transform(code, {
+      const compiled = window.Babel.transform(wrappedCode, {
         presets: ['react'],
-        parserOpts: {
-          allowReturnOutsideFunction: true
-        }
       }).code || '';
 
       // Strip ES6 export statements which are not valid inside a function evaluator block
@@ -51,9 +53,8 @@ const DynamicRenderer: React.FC<{
       const renderFn = new Function('React', 'data', 'onAction', `
         ${cleanCompiled}
         try {
-          return EphemeralDashboard;
+          return __componentWrapper(React, data, onAction);
         } catch(e) {
-          // If the compiler renamed the component or created another structure
           return () => React.createElement('div', null, 'Component loaded but return target not found.');
         }
       `);
@@ -94,7 +95,273 @@ const DynamicRenderer: React.FC<{
   );
 };
 
+const EntrancePortal: React.FC<{
+  onLoginSuccess: (token: string, user: any) => void;
+}> = ({ onLoginSuccess }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('customer');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const endpoint = isLogin ? 'login' : 'register';
+      const body = isLogin 
+        ? { email, password } 
+        : { name, email, password, role };
+
+      const res = await fetch(`http://localhost:8000/api/auth/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        onLoginSuccess(data.access_token, data.user);
+      } else {
+        setError(data.detail || data.message || 'Authentication failed.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Connection to security gateway failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (demoEmail: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: demoEmail, password: 'password123' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onLoginSuccess(data.access_token, data.user);
+      } else {
+        setError(data.detail || data.message || 'Demo authentication failed.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Connection to security gateway failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden">
+      {/* Background Decorators */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-3xl -z-10 animate-pulse pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -z-10 animate-pulse pointer-events-none"></div>
+
+      <div className="max-w-md w-full bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl space-y-6 animate-fadeIn relative">
+        {/* Glow Header */}
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="p-3.5 bg-gradient-to-tr from-rose-500 to-violet-600 rounded-2xl shadow-xl shadow-rose-500/20 border border-rose-500/30 flex items-center justify-center mb-2">
+            <Shield className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+            OmniGate ERP OS
+          </h1>
+          <p className="text-[10px] text-rose-400 uppercase tracking-widest font-semibold font-mono">
+            Identity Security Gateway
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs flex items-center gap-2 animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full Name"
+                required
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all shadow-inner"
+              />
+            </div>
+          )}
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              required
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all shadow-inner"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all shadow-inner"
+            />
+          </div>
+          {!isLogin && (
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block font-mono">Assign Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all cursor-pointer"
+              >
+                <option value="customer">Customer</option>
+                <option value="employee">Employee</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 disabled:from-slate-800 disabled:to-slate-800 text-white rounded-xl font-semibold shadow-lg shadow-rose-950/20 active:scale-95 transition-all text-sm flex items-center justify-center gap-2 mt-6"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+            ) : (
+              <span>{isLogin ? 'Sign In to Kernel' : 'Create Account'}</span>
+            )}
+          </button>
+        </form>
+
+        <div className="text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-xs text-slate-400 hover:text-slate-200 transition-all"
+          >
+            {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Log In'}
+          </button>
+        </div>
+
+        {/* Demo Accounts Panel */}
+        <div className="border-t border-slate-800/80 pt-6 space-y-3">
+          <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold font-mono block text-center">
+            🔐 Developer Sandbox Credentials
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleDemoLogin('alice@example.com')}
+              disabled={loading}
+              className="px-3 py-2 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-rose-500/20 rounded-xl text-[10px] text-rose-400 font-semibold font-mono text-left transition-all active:scale-95 flex flex-col gap-0.5"
+            >
+              <span>Alice Smith</span>
+              <span className="text-[8px] text-slate-500 font-normal uppercase">Role: admin</span>
+            </button>
+            <button
+              onClick={() => handleDemoLogin('bob@example.com')}
+              disabled={loading}
+              className="px-3 py-2 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-indigo-500/20 rounded-xl text-[10px] text-indigo-400 font-semibold font-mono text-left transition-all active:scale-95 flex flex-col gap-0.5"
+            >
+              <span>Bob Jones</span>
+              <span className="text-[8px] text-slate-500 font-normal uppercase">Role: employee</span>
+            </button>
+            <button
+              onClick={() => handleDemoLogin('charlie@example.com')}
+              disabled={loading}
+              className="px-3 py-2 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-emerald-500/20 rounded-xl text-[10px] text-emerald-400 font-semibold font-mono text-left transition-all active:scale-95 flex flex-col gap-0.5"
+            >
+              <span>Charlie Brown</span>
+              <span className="text-[8px] text-slate-500 font-normal uppercase">Role: customer</span>
+            </button>
+            <button
+              onClick={() => handleDemoLogin('diana@example.com')}
+              disabled={loading}
+              className="px-3 py-2 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-emerald-500/20 rounded-xl text-[10px] text-emerald-400 font-semibold font-mono text-left transition-all active:scale-95 flex flex-col gap-0.5"
+            >
+              <span>Diana Prince</span>
+              <span className="text-[8px] text-slate-500 font-normal uppercase">Role: customer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PROGRESS_MESSAGES = [
+  "Agent supervisor routing request...",
+  "Running ReAct reasoning loop...",
+  "Compiling UI widget...",
+  "Auditing schema boundaries...",
+  "Verifying ledger cryptography...",
+  "Synthesizing visual components..."
+];
+
+const PremiumLoader: React.FC<{ message: string }> = ({ message }) => {
+  return (
+    <div className="relative w-full min-h-[400px] rounded-2xl bg-zinc-950 border border-zinc-800/80 p-8 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
+      {/* Glowing background highlights */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+      {/* Decorative Glowing Borders */}
+      <div className="absolute inset-0 rounded-2xl border border-rose-500/20 pointer-events-none animate-pulse"></div>
+      <div className="absolute inset-0.5 rounded-2xl border border-indigo-500/10 pointer-events-none animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+
+      <div className="relative flex flex-col items-center max-w-md text-center space-y-6 z-10">
+        {/* Animated Custom Loader */}
+        <div className="relative w-20 h-20">
+          {/* Outer rotating ring */}
+          <div className="absolute inset-0 border-4 border-rose-500/25 border-t-rose-500 rounded-full animate-spin"></div>
+          {/* Inner counter-rotating ring */}
+          <div className="absolute inset-2 border-4 border-indigo-500/25 border-b-indigo-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          {/* Center glowing dot */}
+          <div className="absolute inset-6 bg-gradient-to-tr from-rose-500 to-indigo-500 rounded-full shadow-lg shadow-rose-500/50 animate-pulse"></div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold tracking-wider text-rose-400 uppercase font-mono animate-pulse">
+            Executing Agentic Task
+          </h3>
+          <p className="text-slate-200 text-base font-medium h-6 transition-all duration-300">
+            {message}
+          </p>
+        </div>
+
+        {/* Fancy loading dots/bar */}
+        <div className="flex gap-1.5 justify-center">
+          <span className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+          <span className="w-2.5 h-2.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+          <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('erp_token'));
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(
+    localStorage.getItem('erp_user') ? JSON.parse(localStorage.getItem('erp_user')!) : null
+  );
+
   const [question, setQuestion] = useState("Show me today's anomalous transactions");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'ui' | 'trace' | 'schema' | 'ledger' | 'data'>('ui');
@@ -113,12 +380,105 @@ export default function App() {
   const [selectedGraphNode, setSelectedGraphNode] = useState<any>(null);
   const [isVerifyingLedger, setIsVerifyingLedger] = useState(false);
 
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
+  const [taskError, setTaskError] = useState<string | null>(null);
+  const [progressMessageIdx, setProgressMessageIdx] = useState(0);
+
+  const getHeaders = (hasBody = true) => {
+    const headers: any = {};
+    if (hasBody) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('erp_token');
+    localStorage.removeItem('erp_user');
+    setToken(null);
+    setUser(null);
+    setResponse(null);
+  };
+
+  // Cycle through progress messages while task is pending
+  useEffect(() => {
+    if (!pendingTaskId) return;
+    const interval = setInterval(() => {
+      setProgressMessageIdx((prev) => (prev + 1) % PROGRESS_MESSAGES.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [pendingTaskId]);
+
+  // Poll task status from /api/tasks/{task_id}
+  useEffect(() => {
+    if (!pendingTaskId) return;
+    
+    let isMounted = true;
+    let intervalId: any = null;
+
+    const pollTask = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/tasks/${pendingTaskId}`, {
+          headers: getHeaders(false),
+        });
+        if (!res.ok) {
+          if (res.status === 401) {
+            handleLogout();
+            setPendingTaskId(null);
+            return;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        if (!isMounted) return;
+
+        if (data.status === 'completed') {
+          setResponse(data.result);
+          setPendingTaskId(null);
+          setNotification({ message: 'Task completed successfully.', type: 'success' });
+          fetchSchema();
+          fetchLedger();
+          fetchGraph();
+        } else if (data.status === 'failed') {
+          setPendingTaskId(null);
+          const errMsg = data.error || 'Agentic task execution failed.';
+          setTaskError(errMsg);
+          setNotification({ 
+            message: errMsg, 
+            type: 'error' 
+          });
+        }
+      } catch (err: any) {
+        console.error("Error polling task:", err);
+      }
+    };
+
+    pollTask();
+    intervalId = setInterval(pollTask, 1500);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [pendingTaskId]);
+
   // Fetch Database Schema from server
   const fetchSchema = async () => {
+    if (!token) return;
     try {
-      const res = await fetch('http://localhost:8000/api/schema');
+      const res = await fetch('http://localhost:8000/api/schema', {
+        headers: getHeaders(false),
+      });
       const data = await res.json();
-      setSchema(data.schema);
+      if (res.ok) {
+        setSchema(data.schema);
+      } else if (res.status === 401) {
+        handleLogout();
+      }
     } catch (err) {
       console.error("Failed to retrieve schema info", err);
     }
@@ -126,11 +486,18 @@ export default function App() {
 
   // Fetch Database Ledger from server
   const fetchLedger = async (showSpinner = false) => {
+    if (!token) return;
     if (showSpinner) setIsVerifyingLedger(true);
     try {
-      const res = await fetch('http://localhost:8000/api/ledger');
+      const res = await fetch('http://localhost:8000/api/ledger', {
+        headers: getHeaders(false),
+      });
       const data = await res.json();
-      setLedgerData(data);
+      if (res.ok) {
+        setLedgerData(data);
+      } else if (res.status === 401) {
+        handleLogout();
+      }
     } catch (err) {
       console.error("Failed to retrieve ledger info", err);
     } finally {
@@ -140,10 +507,17 @@ export default function App() {
 
   // Fetch Governance Graph from server
   const fetchGraph = async () => {
+    if (!token) return;
     try {
-      const res = await fetch('http://localhost:8000/api/graph');
+      const res = await fetch('http://localhost:8000/api/graph', {
+        headers: getHeaders(false),
+      });
       const data = await res.json();
-      setGraphData(data);
+      if (res.ok) {
+        setGraphData(data);
+      } else if (res.status === 401) {
+        handleLogout();
+      }
     } catch (err) {
       console.error("Failed to retrieve graph info", err);
     }
@@ -151,20 +525,40 @@ export default function App() {
 
   // Send query request to API
   const handleQuery = async (queryText: string) => {
+    if (!token) return;
     setLoading(true);
+    setTaskError(null);
+    setResponse(null); // Clear previous response
     try {
       const res = await fetch('http://localhost:8000/api/query', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({ question: queryText }),
       });
       const data = await res.json();
-      setResponse(data);
-      setActiveTab('ui');
-      // Proactively refresh schema, ledger, and graph definitions in case of evolutionary changes
-      fetchSchema();
-      fetchLedger();
-      fetchGraph();
+      if (res.ok) {
+        if (data.task_id) {
+          setPendingTaskId(data.task_id);
+          setActiveTab('ui');
+        } else if (data.status === 'completed') {
+          setResponse(data.result);
+          setActiveTab('ui');
+          fetchSchema();
+          fetchLedger();
+          fetchGraph();
+        } else {
+          // Fallback if data is the old synchronous format
+          setResponse(data);
+          setActiveTab('ui');
+          fetchSchema();
+          fetchLedger();
+          fetchGraph();
+        }
+      } else if (res.status === 401) {
+        handleLogout();
+      } else {
+        setNotification({ message: data.detail || 'Failed to execute query.', type: 'error' });
+      }
     } catch (err) {
       console.error(err);
       setNotification({ message: 'Failed to connect to ERP OS Kernel backend.', type: 'error' });
@@ -175,6 +569,7 @@ export default function App() {
 
   // Run on mount to populate initial state and schema details
   useEffect(() => {
+    if (!token) return;
     // Wait slightly to ensure Babel is fully loaded
     const timer = setTimeout(() => {
       handleQuery("Show me today's anomalous transactions");
@@ -183,7 +578,7 @@ export default function App() {
       fetchGraph();
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [token]);
 
   // Handle action triggers from dynamic UI
   const handleAction = async (actionId: string, params: any) => {
@@ -234,7 +629,7 @@ export default function App() {
 
       const res = await fetch('http://localhost:8000/api/action/execute', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(body),
       });
       const result = await res.json();
@@ -245,6 +640,8 @@ export default function App() {
         handleQuery(question);
         fetchLedger();
         fetchGraph();
+      } else if (res.status === 401) {
+        handleLogout();
       } else {
         setNotification({ message: result.detail || result.message || 'Action execution failed.', type: 'error' });
       }
@@ -253,6 +650,19 @@ export default function App() {
       setNotification({ message: 'Action execution failed.', type: 'error' });
     }
   };
+
+  if (!token) {
+    return (
+      <EntrancePortal
+        onLoginSuccess={(jwtToken, userData) => {
+          localStorage.setItem('erp_token', jwtToken);
+          localStorage.setItem('erp_user', JSON.stringify(userData));
+          setToken(jwtToken);
+          setUser(userData);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-x-hidden selection:bg-rose-500/30 selection:text-white">
@@ -278,7 +688,22 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-xs text-slate-400 font-medium">
+            {user && (
+              <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-3 py-1.5 rounded-xl text-xs">
+                <div className="flex flex-col text-right">
+                  <span className="text-slate-200 font-semibold">{user.name}</span>
+                  <span className="text-[9px] uppercase tracking-wider text-rose-400 font-bold font-mono">{user.role}</span>
+                </div>
+                <div className="w-px h-6 bg-slate-800" />
+                <button
+                  onClick={handleLogout}
+                  className="text-slate-400 hover:text-rose-400 active:scale-95 transition-all font-semibold hover:underline"
+                >
+                  Log Out
+                </button>
+              </div>
+            )}
+            <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-xs text-slate-400 font-medium">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
               Kernel Active
             </span>
@@ -323,14 +748,15 @@ export default function App() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Instruct agents..."
-                className="w-full min-h-[100px] bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all resize-none shadow-inner"
+                disabled={loading || !!pendingTaskId}
+                className="w-full min-h-[100px] bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all resize-none shadow-inner disabled:opacity-50"
               />
               <button
                 onClick={() => handleQuery(question)}
-                disabled={loading}
+                disabled={loading || !!pendingTaskId}
                 className="absolute bottom-3 right-3 p-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 disabled:from-slate-800 disabled:to-slate-800 text-white rounded-lg shadow-lg hover:shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center"
               >
-                {loading ? (
+                {loading || pendingTaskId ? (
                   <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                 ) : (
                   <Play className="w-4 h-4" />
@@ -350,11 +776,12 @@ export default function App() {
                   ].map((item, idx) => (
                     <button
                       key={idx}
+                      disabled={loading || !!pendingTaskId}
                       onClick={() => {
                         setQuestion(item.query);
                         handleQuery(item.query);
                       }}
-                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-slate-400 hover:text-slate-200 transition-all flex items-center justify-between group"
+                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-slate-400 hover:text-slate-200 transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span>{item.label}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
@@ -373,11 +800,12 @@ export default function App() {
                   ].map((item, idx) => (
                     <button
                       key={idx}
+                      disabled={loading || !!pendingTaskId}
                       onClick={() => {
                         setQuestion(item.query);
                         handleQuery(item.query);
                       }}
-                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-indigo-400 hover:text-indigo-200 border-indigo-950/30 hover:border-indigo-500/20 transition-all flex items-center justify-between group"
+                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-indigo-400 hover:text-indigo-200 border-indigo-950/30 hover:border-indigo-500/20 transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span>{item.label}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-indigo-800 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
@@ -396,11 +824,12 @@ export default function App() {
                   ].map((item, idx) => (
                     <button
                       key={idx}
+                      disabled={loading || !!pendingTaskId}
                       onClick={() => {
                         setQuestion(item.query);
                         handleQuery(item.query);
                       }}
-                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-teal-400 hover:text-teal-200 border-teal-950/30 hover:border-teal-500/20 transition-all flex items-center justify-between group"
+                      className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-teal-400 hover:text-teal-200 border-teal-950/30 hover:border-teal-500/20 transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span>{item.label}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-teal-800 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-all" />
@@ -413,11 +842,12 @@ export default function App() {
               <div className="space-y-2">
                 <span className="text-[10px] text-amber-500/80 uppercase tracking-widest font-bold font-mono">FinOps Protection Shield</span>
                 <button
+                  disabled={loading || !!pendingTaskId}
                   onClick={() => {
                     setQuestion("Trigger an infinite query loop test");
                     handleQuery("Trigger an infinite query loop test");
                   }}
-                  className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-amber-400 hover:text-amber-200 border-amber-950/30 hover:border-amber-500/20 transition-all flex items-center justify-between group"
+                  className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-amber-400 hover:text-amber-200 border-amber-950/30 hover:border-amber-500/20 transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Simulate Loop Intercept</span>
                   <ArrowRight className="w-3.5 h-3.5 text-amber-800 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
@@ -428,11 +858,12 @@ export default function App() {
               <div className="space-y-2">
                 <span className="text-[10px] text-emerald-400/80 uppercase tracking-widest font-bold font-mono">Compliance & Ledger Verification</span>
                 <button
+                  disabled={loading || !!pendingTaskId}
                   onClick={() => {
                     setActiveTab('ledger');
                     fetchLedger(true);
                   }}
-                  className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-emerald-400 hover:text-emerald-200 border-emerald-950/30 hover:border-emerald-500/20 transition-all flex items-center justify-between group"
+                  className="w-full text-left px-4 py-2.5 bg-slate-950/60 hover:bg-slate-900 border border-slate-900 hover:border-slate-800/80 rounded-xl text-xs text-emerald-400 hover:text-emerald-200 border-emerald-950/30 hover:border-emerald-500/20 transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Verify Ledger Cryptography</span>
                   <ArrowRight className="w-3.5 h-3.5 text-emerald-800 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
@@ -490,7 +921,17 @@ export default function App() {
                   {/* TAB 1: GENERATED UI */}
                   {activeTab === 'ui' && (
                     <div className="space-y-4">
-                      {response && response.ui_code ? (
+                      {pendingTaskId ? (
+                        <PremiumLoader message={PROGRESS_MESSAGES[progressMessageIdx]} />
+                      ) : taskError ? (
+                        <div className="p-5 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm shadow-lg backdrop-blur-sm animate-shake">
+                          <div className="flex items-center gap-2 mb-2 font-semibold">
+                            <AlertCircle className="w-4 h-4 text-rose-400 animate-pulse" />
+                            <span>Task Execution Failed</span>
+                          </div>
+                          <p className="font-mono text-xs text-rose-300/80 bg-black/40 p-3 rounded-lg overflow-x-auto">{taskError}</p>
+                        </div>
+                      ) : response && response.ui_code ? (
                         <DynamicRenderer 
                           code={response.ui_code} 
                           data={response.data} 

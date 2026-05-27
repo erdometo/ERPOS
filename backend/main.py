@@ -1,10 +1,27 @@
 import os
 import json
-from fastapi import FastAPI, HTTPException
+import uuid
+import queue
+import threading
+import pika
+from fastapi import FastAPI, HTTPException, Depends, Request
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from sqlalchemy.orm import sessionmaker
+
+# Import setup_db User and Task models
+from setup_db import User, Task
+
+# Import authentication utilities
+from auth import (
+    get_authenticated_user,
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    current_user_role
+)
 
 # Import our sandboxed Shield Gateway
 from middleware import ShieldGateway
@@ -31,6 +48,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_auth_context_middleware(request: Request, call_next):
+    import jwt
+    from auth import SECRET_KEY, ALGORITHM, current_user_role, current_user_email
+    
+    auth_header = request.headers.get("Authorization")
+    email = None
+    role = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("email")
+            role = payload.get("role")
+        except Exception:
+            pass
+            
+    token_role = current_user_role.set(role)
+    token_email = current_user_email.set(email)
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        current_user_role.reset(token_role)
+        current_user_email.reset(token_email)
+
 gateway = ShieldGateway()
 
 class QueryRequest(BaseModel):
@@ -45,6 +88,18 @@ class ActionExecuteRequest(BaseModel):
     query: str
     params: dict = {}
     governing_node_id: int = None
+
+
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str = "customer" # admin, employee, customer
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
@@ -1224,9 +1279,210 @@ Governs rapid logistics dispatch of high value or high priority product freight 
 
 # ==================== 4. ENDPOINTS ====================
 
-@app.post("/api/query")
-async def execute_query(req: QueryRequest):
+@app.post("/api/auth/register")
+async def register(req: RegisterRequest):
     try:
+        Session = sessionmaker(bind=gateway.engine)
+        db = Session()
+        
+        # Check if user already exists
+        existing_user = db.query(User).filter(User.email == req.email).first()
+        if existing_user:
+            db.close()
+            raise HTTPException(status_code=400, detail="User with this email already exists.")
+            
+        hashed_password = get_password_hash(req.password)
+        new_user = User(
+            name=req.name,
+            email=req.email,
+            role=req.role,
+            password_hash=hashed_password
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        token = create_access_token({"email": new_user.email, "role": new_user.role, "user_id": new_user.id})
+        
+        # Log this registration event to the compliance ledger
+        gateway.log_audit_event(
+            agent_name="System Auth Gateway",
+            action_type="TRANSACTION_MUTATION",
+            action_details=json.dumps({"action": "user_registration", "email": new_user.email, "role": new_user.role})
+        )
+        
+        db.close()
+        return {
+            "status": "success",
+            "message": "User registered successfully.",
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": new_user.id,
+                "name": new_user.name,
+                "email": new_user.email,
+                "role": new_user.role
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/auth/login")
+async def login(req: LoginRequest):
+    try:
+        Session = sessionmaker(bind=gateway.engine)
+        db = Session()
+        
+        user = db.query(User).filter(User.email == req.email).first()
+        if not user or not verify_password(req.password, user.password_hash):
+            db.close()
+            raise HTTPException(status_code=401, detail="Incorrect email or password.")
+            
+        token = create_access_token({"email": user.email, "role": user.role, "user_id": user.id})
+        
+        db.close()
+        return {
+            "status": "success",
+            "message": "Login successful.",
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "role": user.role
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def try_enqueue_rabbitmq(task_id: str, query: str, role: str, email: str) -> bool:
+    try:
+        rabbitmq_conn_str = os.getenv("ConnectionStrings__rabbitmq")
+        if rabbitmq_conn_str:
+            params = pika.URLParameters(rabbitmq_conn_str)
+        else:
+            params = pika.ConnectionParameters(host='localhost', connection_attempts=1, retry_delay=1)
+        
+        connection = pika.BlockingConnection(params)
+        channel = connection.channel()
+        channel.queue_declare(queue='agent_tasks', durable=True)
+        
+        payload = {
+            "task_id": task_id,
+            "query": query,
+            "role": role,
+            "email": email
+        }
+        
+        channel.basic_publish(
+            exchange='',
+            routing_key='agent_tasks',
+            body=json.dumps(payload),
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # make message persistent
+            )
+        )
+        connection.close()
+        print(f"[RabbitMQ] Successfully enqueued task {task_id}", flush=True)
+        return True
+    except Exception as e:
+        print(f"[RabbitMQ] Failed to connect/publish, falling back to local queue: {e}", flush=True)
+        return False
+
+
+def local_worker():
+    from datetime import datetime
+    while True:
+        try:
+            task_payload = local_task_queue.get()
+            if task_payload is None:
+                break
+            
+            task_id = task_payload["task_id"]
+            question = task_payload["query"]
+            role = task_payload["role"]
+            email = task_payload["email"]
+            
+            print(f"[Local Worker] Starting task {task_id}: '{question}' (role={role}, email={email})", flush=True)
+            
+            # Update status to processing
+            Session = sessionmaker(bind=gateway.engine)
+            db = Session()
+            try:
+                task_db = db.query(Task).filter(Task.task_id == task_id).first()
+                if task_db:
+                    task_db.status = "processing"
+                    db.commit()
+            except Exception as db_err:
+                print(f"[Local Worker] DB error: {db_err}", flush=True)
+                
+            # Set request-scoped context variables so middleware (e.g. current_user_role) works correctly
+            from auth import current_user_role, current_user_email
+            token_role = current_user_role.set(role)
+            token_email = current_user_email.set(email)
+            
+            try:
+                api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+                custom_id = os.getenv("CUSTOM_CLIENT_ID")
+                custom_secret = os.getenv("CUSTOM_CLIENT_SECRET")
+                
+                if (custom_id and custom_secret) or api_key:
+                    try:
+                        result = run_real_llm_agent(question)
+                    except Exception as llm_err:
+                        print(f"[Local Worker] Real LLM agent failed: {llm_err}. Falling back to simulator.", flush=True)
+                        result = simulate_agentic_workflow(question)
+                else:
+                    result = simulate_agentic_workflow(question)
+                
+                # Success!
+                task_db = db.query(Task).filter(Task.task_id == task_id).first()
+                if task_db:
+                    task_db.status = "completed"
+                    task_db.result_json = json.dumps(result)
+                    task_db.finished_at = datetime.utcnow()
+                    db.commit()
+                    print(f"[Local Worker] Task {task_id} completed successfully.", flush=True)
+                    
+            except Exception as e:
+                print(f"[Local Worker] Error processing task {task_id}: {e}", flush=True)
+                task_db = db.query(Task).filter(Task.task_id == task_id).first()
+                if task_db:
+                    task_db.status = "failed"
+                    task_db.result_json = json.dumps({"error": str(e)})
+                    task_db.finished_at = datetime.utcnow()
+                    db.commit()
+            finally:
+                # Reset context variables
+                current_user_role.reset(token_role)
+                current_user_email.reset(token_email)
+                db.close()
+                local_task_queue.task_done()
+        except Exception as queue_err:
+            print(f"[Local Worker] Unexpected error in queue loop: {queue_err}", flush=True)
+
+
+# Start local worker thread only if not running in the worker daemon
+import sys
+if "worker.py" not in sys.argv[0]:
+    local_task_queue = queue.Queue()
+    worker_thread = threading.Thread(target=local_worker, daemon=True)
+    worker_thread.start()
+
+
+@app.post("/api/query")
+async def execute_query(req: QueryRequest, user: dict = Depends(get_authenticated_user)):
+    try:
+        # Generate a unique task_id (UUID)
+        task_id = str(uuid.uuid4())
+        
         # Log query request to audit ledger
         gateway.log_audit_event(
             agent_name="Autonomous Kernel Agent",
@@ -1234,30 +1490,87 @@ async def execute_query(req: QueryRequest):
             action_details=json.dumps({"question": req.question})
         )
         
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        custom_id = os.getenv("CUSTOM_CLIENT_ID")
-        custom_secret = os.getenv("CUSTOM_CLIENT_SECRET")
+        # Record it in the tasks table with status 'pending'
+        Session = sessionmaker(bind=gateway.engine)
+        db = Session()
+        task = Task(
+            task_id=task_id,
+            status="pending",
+            query=req.question,
+            role=user.get("role"),
+            email=user.get("email")
+        )
+        db.add(task)
+        db.commit()
+        db.close()
         
-        # If API configuration is present, run the true LLM agent execution
-        if (custom_id and custom_secret) or api_key:
+        # Try pushing to RabbitMQ first
+        pushed = try_enqueue_rabbitmq(task_id, req.question, user.get("role"), user.get("email"))
+        if not pushed:
+            # Push to the local in-memory queue
+            local_task_queue.put({
+                "task_id": task_id,
+                "query": req.question,
+                "role": user.get("role"),
+                "email": user.get("email")
+            })
+            
+        return {"status": "pending", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/tasks/{task_id}")
+async def get_task_status(task_id: str, user: dict = Depends(get_authenticated_user)):
+    try:
+        Session = sessionmaker(bind=gateway.engine)
+        db = Session()
+        task = db.query(Task).filter(Task.task_id == task_id).first()
+        if not task:
+            db.close()
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        status = task.status
+        result_str = task.result_json
+        db.close()
+        
+        response_data = {
+            "task_id": task_id,
+            "status": status,
+        }
+        
+        if result_str:
             try:
-                result = run_real_llm_agent(req.question)
-                return result
-            except Exception as llm_err:
-                # Fallback to simulation trace with error reporting
-                print(f"Real LLM agent failed: {str(llm_err)}. Falling back to offline simulator.")
-                return simulate_agentic_workflow(req.question)
+                result_json = json.loads(result_str)
+                if isinstance(result_json, dict) and "error" in result_json:
+                    response_data["error"] = result_json["error"]
+                
+                response_data["result"] = result_json
+                
+                if isinstance(result_json, dict):
+                    response_data["trace"] = result_json.get("trace", [])
+                    response_data["data"] = result_json.get("data", {})
+                    response_data["ui_code"] = result_json.get("ui_code", "")
+            except Exception:
+                response_data["result"] = result_str
+                response_data["error"] = result_str
         else:
-            # Run offline simulation
-            result = simulate_agentic_workflow(req.question)
-            return result
+            response_data["result"] = None
+            
+        return response_data
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/action")
-async def execute_action(req: ActionRequest):
+async def execute_action(req: ActionRequest, user: dict = Depends(get_authenticated_user)):
     try:
+        if user["role"] == "customer":
+            raise HTTPException(status_code=403, detail="Forbidden: Customers are not permitted to execute actions.")
+            
         action_id = req.action_id
         params = req.params
         
@@ -1301,13 +1614,20 @@ async def execute_action(req: ActionRequest):
             }
             
         return {"status": "error", "message": "Unknown action"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/action/execute")
-async def execute_action_execute(req: ActionExecuteRequest):
+async def execute_action_execute(req: ActionExecuteRequest, user: dict = Depends(get_authenticated_user)):
     try:
+        # Enforce role restriction at endpoint level as well (redundancy)
+        if user["role"] == "customer":
+            raise HTTPException(status_code=403, detail="Forbidden: Customers are not permitted to execute write actions.")
+            
+        print(f"DEBUG main: id(current_user_role)={id(current_user_role)}, current_user_role.get()={current_user_role.get()}")
         result = gateway.execute_action_mutation(
             sql_query_str=req.query,
             params=req.params,
@@ -1317,13 +1637,18 @@ async def execute_action_execute(req: ActionExecuteRequest):
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/ledger")
-async def get_ledger():
+async def get_ledger(user: dict = Depends(get_authenticated_user)):
     try:
+        if user["role"] == "customer":
+            raise HTTPException(status_code=403, detail="Forbidden: Access restricted to employees and administrators.")
+            
         with gateway.engine.connect() as conn:
             result = conn.execute(text("SELECT id, timestamp, agent_name, action_type, action_details, governing_node_id, prev_hash, row_hash FROM audit_ledger ORDER BY id DESC"))
             rows = result.fetchall()
@@ -1355,20 +1680,30 @@ async def get_ledger():
             "tampered_indices": tampered_indices,
             "events": events
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/schema")
-async def get_schema():
+async def get_schema(user: dict = Depends(get_authenticated_user)):
     try:
+        if user["role"] == "customer":
+            raise HTTPException(status_code=403, detail="Forbidden: Access restricted to employees and administrators.")
         return {"schema": gateway.get_schema_info()}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/graph")
-async def get_graph():
+async def get_graph(user: dict = Depends(get_authenticated_user)):
     try:
+        if user["role"] == "customer":
+            raise HTTPException(status_code=403, detail="Forbidden: Access restricted to employees and administrators.")
+            
         with gateway.engine.connect() as conn:
             node_check = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='graph_nodes';")).fetchone()
             if not node_check:
@@ -1401,6 +1736,8 @@ async def get_graph():
                 })
                 
             return {"nodes": nodes, "edges": edges}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
