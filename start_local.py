@@ -20,10 +20,19 @@ def read_output(process, prefix, color_code):
                 break
             if line:
                 # Strip and print with prefix
-                print(f"{color_code}{prefix}{reset_code} {line.strip()}", flush=True)
+                try:
+                    print(f"{color_code}{prefix}{reset_code} {line.strip()}", flush=True)
+                except UnicodeEncodeError:
+                    # Fallback for terminals that cannot print unicode characters
+                    encoding = sys.stdout.encoding or 'ascii'
+                    safe_line = line.encode(encoding, errors='replace').decode(encoding)
+                    print(f"{color_code}{prefix}{reset_code} {safe_line.strip()}", flush=True)
     except Exception as e:
         if not shutdown_event.is_set():
-            print(f"{color_code}{prefix}{reset_code} Error reading stream: {e}", flush=True)
+            try:
+                print(f"{color_code}{prefix}{reset_code} Error reading stream: {e}", flush=True)
+            except Exception:
+                pass
     finally:
         try:
             process.stdout.close()
@@ -31,6 +40,11 @@ def read_output(process, prefix, color_code):
             pass
 
 def main():
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
     print("==================================================================", flush=True)
     print("OmniGate ERP OS: Local Application Launcher Orchestrator", flush=True)
     print("==================================================================", flush=True)
