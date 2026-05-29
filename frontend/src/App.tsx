@@ -797,6 +797,8 @@ export default function App() {
                   {[
                     { label: "Audit Anomalous Orders", query: "Show me today's anomalous transactions" },
                     { label: "Inspect Product Inventory", query: "Inspect product stock levels" },
+                    { label: "Run Saga: Compliant Purchase", query: "Run Procure-to-Pay workflow to purchase 1 Ergonomic Chair" },
+                    { label: "Run Saga: Rollback (Over $500)", query: "Run Procure-to-Pay workflow to purchase 2 Standing Desks" },
                   ].map((item, idx) => (
                     <button
                       key={idx}

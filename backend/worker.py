@@ -46,12 +46,12 @@ def process_task(ch, method, properties, body):
             
             if (custom_id and custom_secret) or api_key:
                 try:
-                    result = run_real_llm_agent(query)
+                    result = run_real_llm_agent(query, role=role, email=email)
                 except Exception as llm_err:
                     print(f"[Worker] Real LLM agent failed: {llm_err}. Falling back to simulator.", flush=True)
-                    result = simulate_agentic_workflow(query)
+                    result = simulate_agentic_workflow(query, role=role, email=email)
             else:
-                result = simulate_agentic_workflow(query)
+                result = simulate_agentic_workflow(query, role=role, email=email)
             
             # Save success results
             task_db = db.query(Task).filter(Task.task_id == task_id).first()

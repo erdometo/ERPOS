@@ -1,122 +1,22 @@
 import os
 import json
 import hashlib
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, Text, text
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timedelta
 import random
 import bcrypt
+from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
+
+# Import from our central core.db module
+from core.db import (
+    engine, User, Product, Order, OrderItem, GraphNode, GraphEdge, 
+    VectorPartition, AuditLedger, Task, Base
+)
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-Base = declarative_base()
-
-# ==================== 1. SQL (TABULAR) LAYER ====================
-class User(Base):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
-    email = Column(String(100), unique=True, nullable=False)
-    role = Column(String(20), nullable=False) 
-    password_hash = Column(String(100), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    orders = relationship("Order", back_populates="user")
-
-class Product(Base):
-    __tablename__ = 'products'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
-    category = Column(String(50), nullable=False)
-    price = Column(Float, nullable=False)
-    stock_quantity = Column(Integer, nullable=False)
-    order_items = relationship("OrderItem", back_populates="product")
-
-class Order(Base):
-    __tablename__ = 'orders'
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    total_amount = Column(Float, nullable=False)
-    status = Column(String(20), nullable=False) 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    user = relationship("User", back_populates="orders")
-    items = relationship("OrderItem", back_populates="order")
-
-class OrderItem(Base):
-    __tablename__ = 'order_items'
-    id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey('orders.id'), nullable=False)
-    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    quantity = Column(Integer, nullable=False)
-    unit_price = Column(Float, nullable=False)
-    order = relationship("Order", back_populates="items")
-    product = relationship("Product", back_populates="order_items")
-
-
-# ==================== 2. ALIVE GRAPH LAYER (WITH SKILL.MD) ====================
-class GraphNode(Base):
-    __tablename__ = 'graph_nodes'
-    id = Column(Integer, primary_key=True)
-    label = Column(String(50), nullable=False) # e.g., 'workflow', 'regulation'
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=True)
-    skill_markdown = Column(Text, nullable=True) # The skill.md content
-    properties = Column(Text, nullable=True) # JSON encoded metadata
-    
-    # Relationships
-    vector_partitions = relationship("VectorPartition", back_populates="node", cascade="all, delete-orphan")
-
-class GraphEdge(Base):
-    __tablename__ = 'graph_edges'
-    id = Column(Integer, primary_key=True)
-    source_id = Column(Integer, ForeignKey('graph_nodes.id'), nullable=False)
-    target_id = Column(Integer, ForeignKey('graph_nodes.id'), nullable=False)
-    edge_type = Column(String(50), nullable=False) 
-    properties = Column(Text, nullable=True) 
-
-
-# ==================== 3. CONTEXTUAL VECTOR PARTITION LAYER ====================
-class VectorPartition(Base):
-    __tablename__ = 'vector_partitions'
-    id = Column(Integer, primary_key=True)
-    node_id = Column(Integer, ForeignKey('graph_nodes.id'), nullable=False)
-    source_type = Column(String(50), nullable=False) # e.g., 'law', 'email', 'internal_doc'
-    text_content = Column(Text, nullable=False)
-    embedding = Column(Text, nullable=False) # JSON array of floats for cosine similarity
-    
-    node = relationship("GraphNode", back_populates="vector_partitions")
-
-
-# ==================== 4. APPEND-ONLY AUDIT LEDGER LAYER ====================
-class AuditLedger(Base):
-    __tablename__ = 'audit_ledger'
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    agent_name = Column(String(100), nullable=False)
-    action_type = Column(String(50), nullable=False) # e.g., 'SCHEMA_EVOLUTION', 'TRANSACTION_MUTATION'
-    action_details = Column(Text, nullable=False) # JSON-encoded parameters
-    governing_node_id = Column(Integer, ForeignKey('graph_nodes.id'), nullable=True)
-    prev_hash = Column(String(64), nullable=False)
-    row_hash = Column(String(64), nullable=False)
-
-
-# ==================== 5. BACKGROUND JOBS (TASKS) LAYER ====================
-class Task(Base):
-    __tablename__ = 'tasks'
-    task_id = Column(String(36), primary_key=True)
-    status = Column(String(20), nullable=False) # 'pending', 'processing', 'completed', 'failed'
-    query = Column(Text, nullable=False)
-    role = Column(String(20), nullable=True)
-    email = Column(String(100), nullable=True)
-    result_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    finished_at = Column(DateTime, nullable=True)
-
-
-
-# ==================== INITIALIZATION & SEEDING ====================
-def init_db(db_path="sqlite:///erp_database.db"):
-    engine = create_engine(db_path)
+def init_db():
     # Drop dynamic courier_shipments table if it exists
     with engine.connect() as conn:
         try:
@@ -124,6 +24,7 @@ def init_db(db_path="sqlite:///erp_database.db"):
             conn.commit()
         except Exception:
             pass
+    # Drop all tables and recreate them using unified metadata
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     return engine
@@ -151,9 +52,7 @@ def seed_data(engine):
     except Exception as e:
         print(f"Warning: Could not clear external graph and vector stores: {e}")
 
-
-
-    # Seed Tabular SQL
+    # Seed Users
     hashed_pwd = hash_password("password123")
     users = [
         User(name="Alice Smith", email="alice@example.com", role="admin", password_hash=hashed_pwd),
@@ -163,19 +62,25 @@ def seed_data(engine):
     ]
     session.add_all(users)
     
+    # Seed Products with different clearance levels
+    # 1: Customer (public), 2: Employee (internal), 3: Admin (secret/restricted)
     products = [
-        Product(name="Ergonomic Chair", category="Furniture", price=299.99, stock_quantity=50),
-        Product(name="Standing Desk", category="Furniture", price=499.50, stock_quantity=30),
-        Product(name="Laptop Stand", category="Accessories", price=45.00, stock_quantity=100),
-        Product(name="Wireless Mouse", category="Electronics", price=29.99, stock_quantity=200),
-        Product(name="Mechanical Keyboard", category="Electronics", price=120.00, stock_quantity=75),
+        Product(name="Ergonomic Chair", category="Furniture", price=299.99, stock_quantity=50, clearance_level=1),
+        Product(name="Standing Desk", category="Furniture", price=499.50, stock_quantity=30, clearance_level=1),
+        Product(name="Laptop Stand", category="Accessories", price=45.00, stock_quantity=100, clearance_level=1),
+        Product(name="Wireless Mouse", category="Electronics", price=29.99, stock_quantity=200, clearance_level=1),
+        Product(name="Mechanical Keyboard", category="Electronics", price=120.00, stock_quantity=75, clearance_level=1),
+        # Internal employee-only stock
+        Product(name="Quantum Processor v1", category="Hardware", price=1250.00, stock_quantity=10, clearance_level=2),
+        # Admin restricted cluster node
+        Product(name="Mainframe Core Server Cluster", category="Infrastructure", price=8999.00, stock_quantity=3, clearance_level=3),
     ]
     session.add_all(products)
     session.commit()
 
     # Create random orders
     customers = session.query(User).filter_by(role="customer").all()
-    all_products = session.query(Product).all()
+    all_products = session.query(Product).filter(Product.clearance_level <= 1).all()
     for _ in range(10):
         customer = random.choice(customers)
         order = Order(
@@ -220,7 +125,8 @@ Enforces internal regulations, laws, and warehouse limits on incoming customer t
         name="Order Verification Workflow",
         description="Core workflow sequence that runs upon incoming customer orders.",
         skill_markdown=skill_order_validation.strip(),
-        properties=json.dumps({"version": "2.1.0", "active": True})
+        properties=json.dumps({"version": "2.1.0", "active": True}),
+        clearance_level=1
     )
 
     skill_high_value = """
@@ -240,7 +146,8 @@ Defines constraints, MFA requirements, and override approvals for large corporat
         name="High Value Transaction Policy",
         description="Regulatory boundaries for high cost transaction accounting.",
         skill_markdown=skill_high_value.strip(),
-        properties=json.dumps({"limit": 500.0, "mfa_required": True})
+        properties=json.dumps({"limit": 500.0, "mfa_required": True}),
+        clearance_level=2  # Employee/Admin only
     )
 
     skill_replenishment = """
@@ -259,7 +166,8 @@ Fulfills stock restocking parameters when product inventories fall below thresho
         name="Automated Inventory Replenishment",
         description="Fulfills product stock levels dynamically.",
         skill_markdown=skill_replenishment.strip(),
-        properties=json.dumps({"reorder_count": 50})
+        properties=json.dumps({"reorder_count": 50}),
+        clearance_level=1
     )
     
     session.add_all([node1, node2, node3])
@@ -278,13 +186,15 @@ Fulfills stock restocking parameters when product inventories fall below thresho
         node_id=node2.id,
         source_type="law",
         text_content="Corporate Compliance Act §4.2: Transactions exceeding $500 require visual audit trail and supervisor waiver validation.",
-        embedding=json.dumps([0.9, 0.1, 0.05])
+        embedding=json.dumps([0.9, 0.1, 0.05]),
+        clearance_level=2
     )
     p2 = VectorPartition(
         node_id=node2.id,
         source_type="email",
         text_content="Email from CEO (2026-05-10): Re: Cashflow regulations. Keep the MFA limit strictly at $500. Do not lift this until audit is over.",
-        embedding=json.dumps([0.85, 0.15, 0.08])
+        embedding=json.dumps([0.85, 0.15, 0.08]),
+        clearance_level=2
     )
     
     # Vector partitions linked to node 1 (Order Verification Workflow)
@@ -292,13 +202,15 @@ Fulfills stock restocking parameters when product inventories fall below thresho
         node_id=node1.id,
         source_type="internal_doc",
         text_content="Warehouse Logistics Manual: Ergonomic Chair shipments are restricted to maximum 5 units per customer during standard freight restrictions.",
-        embedding=json.dumps([0.1, 0.9, 0.05])
+        embedding=json.dumps([0.1, 0.9, 0.05]),
+        clearance_level=1
     )
     p4 = VectorPartition(
         node_id=node1.id,
         source_type="email",
         text_content="Email from Logistics Manager: Re: Ergonomic chair backlogs. Make sure the order workflow blocks large bulk requests.",
-        embedding=json.dumps([0.08, 0.88, 0.1])
+        embedding=json.dumps([0.08, 0.88, 0.1]),
+        clearance_level=1
     )
 
     session.add_all([p1, p2, p3, p4])
@@ -310,7 +222,6 @@ Fulfills stock restocking parameters when product inventories fall below thresho
     genesis_prev_hash = "0" * 64
     genesis_time = datetime(2026, 5, 20, 12, 0, 0)
     
-    # Format: ISO_timestamp|agent_name|action_type|action_details|prev_hash
     genesis_data = f"{genesis_time.isoformat()}|System Kernel|GENESIS|{genesis_details}|{genesis_prev_hash}"
     genesis_hash = hashlib.sha256(genesis_data.encode("utf-8")).hexdigest()
     
@@ -325,7 +236,6 @@ Fulfills stock restocking parameters when product inventories fall below thresho
     session.add(g_block)
     session.commit()
     
-    # 2. Add DB Initialization Event
     rec1_time = genesis_time + timedelta(minutes=2)
     rec1_details = json.dumps({"action": "Seed relational tables and initial governance workflows"})
     rec1_data = f"{rec1_time.isoformat()}|System Seeder|DB_INITIALIZATION|{rec1_details}|{genesis_hash}"
@@ -342,7 +252,7 @@ Fulfills stock restocking parameters when product inventories fall below thresho
     session.add(row1)
     session.commit()
 
-    print("Hybrid SQL + Graph (with skill.md) + Mapped Vector Partitions database seeded successfully.")
+    print("Hybrid SQL + Graph + Mapped Vector database seeded successfully with clearance controls.")
 
 if __name__ == "__main__":
     db_engine = init_db()

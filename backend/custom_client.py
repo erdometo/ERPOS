@@ -43,7 +43,7 @@ class ChatCustom(BaseChatModel):
             method="POST"
         )
         try:
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 res = json.loads(response.read().decode("utf-8"))
                 self._token = res.get("token")
         except Exception as e:
@@ -62,7 +62,7 @@ class ChatCustom(BaseChatModel):
             method="GET"
         )
         try:
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 models_list = json.loads(response.read().decode("utf-8"))
                 mapping = {}
                 for m in models_list:
@@ -174,7 +174,7 @@ class ChatCustom(BaseChatModel):
         )
         
         try:
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 res = json.loads(response.read().decode("utf-8"))
                 content = res.get("content", "")
                 ai_message = AIMessage(content=content)
@@ -193,7 +193,7 @@ class ChatCustom(BaseChatModel):
                     },
                     method="POST"
                 )
-                with urllib.request.urlopen(req) as retry_response:
+                with urllib.request.urlopen(req, timeout=15) as retry_response:
                     res = json.loads(retry_response.read().decode("utf-8"))
                     content = res.get("content", "")
                     ai_message = AIMessage(content=content)

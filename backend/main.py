@@ -103,7 +103,7 @@ class LoginRequest(BaseModel):
 
 
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
-def run_real_llm_agent(question: str):
+def run_real_llm_agent(question: str, role: str = None, email: str = None):
     from langchain_core.prompts import ChatPromptTemplate
     
     custom_id = os.getenv("CUSTOM_CLIENT_ID")
@@ -132,7 +132,10 @@ def run_real_llm_agent(question: str):
     })
     
     # Introspect schema initially
-    current_schema = gateway.get_schema_info()
+    current_schema = gateway.get_schema_info(role=role)
+    
+    retrieved_products = None
+    retrieved_orders = None
     
     tools_description = """
 Available Multi-Model Gateways (Tools):
@@ -176,7 +179,8 @@ Current Database Schema Map:
 
 Instructions:
 - Analyze the user request. Break it down into step-by-step tool invocations.
-- You can run multiple tools in sequence. For example, search global policies first, then traverse the workflow graph, search local vectors, and finally query SQL tables.
+- IMPORTANT: You MUST only output ONE Thought, ONE Action, and ONE Arguments block per turn. Do NOT generate multiple steps or mock observations. Do NOT generate the Final Answer in the same turn as an Action. Stop generating immediately after outputting the Arguments block.
+- You can run multiple tools in sequence across multiple turns. For example, search global policies first, then traverse the workflow graph, search local vectors, and finally query SQL tables.
 - If requested to evolve the database, use `execute_ddl`, `evolve_graph_node`, or `vectorize_document` tools to update the multi-model storage layers.
 - Formulate your output at each step in exactly the following structured format (do not output extra characters, output exactly this):
 
@@ -213,31 +217,40 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
             "history": history_str
         })
         res = get_content_str(res_obj).strip()
+        print(f"[DEBUG run_real_llm_agent] Raw LLM Response: {repr(res)}", flush=True)
         
         # Parse Thought, Action, Arguments
         thought = ""
         action = ""
         arguments_str = ""
+        final_answer = ""
         
         lines = res.split("\n")
         for line in lines:
-            if line.startswith("Thought:"):
+            if line.startswith("Thought:") and not action:
                 thought = line[8:].strip()
             elif line.startswith("Action:"):
                 action = line[7:].strip()
-            elif line.startswith("Arguments:"):
+            elif line.startswith("Arguments:") and action:
                 arguments_str = line[10:].strip()
-            elif line.startswith("Final Answer:"):
+            elif line.startswith("Final Answer:") and not action:
                 final_answer = line[13:].strip()
                 
-        if not thought:
-            if "Final Answer:" in res:
-                final_answer = res.split("Final Answer:")[1].strip()
+        if not action and not final_answer:
+            if not thought:
+                if "Final Answer:" in res:
+                    final_answer = res.split("Final Answer:")[1].strip()
+                else:
+                    thought = "Analyzing steps..."
+                    final_answer = res
             else:
-                thought = "Analyzing steps..."
-                final_answer = res
+                # If there's thought but no action or final answer, check if "Final Answer:" substring is inside res
+                if "Final Answer:" in res:
+                    final_answer = res.split("Final Answer:")[1].strip()
+                else:
+                    final_answer = res
                 
-        if final_answer:
+        if final_answer and not action:
             trace.append({
                 "agent": "Autonomous Kernel Agent",
                 "action": "Final Response Formulated",
@@ -316,15 +329,21 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
         # Execute Tool via Shield Gateway
         try:
             if action == "execute_sql":
-                tool_res = gateway.execute_sql(args.get("query", ""))
+                query_str = args.get("query", "")
+                tool_res = gateway.execute_sql(query_str, role=role, email=email)
+                if isinstance(tool_res, list):
+                    if "products" in query_str.lower():
+                        retrieved_products = tool_res
+                    if "orders" in query_str.lower():
+                        retrieved_orders = tool_res
             elif action == "execute_ddl":
-                tool_res = gateway.execute_ddl(args.get("query", ""))
+                tool_res = gateway.execute_ddl(args.get("query", ""), role=role)
             elif action == "traverse_graph":
-                tool_res = gateway.traverse_graph(args.get("node_name", ""))
+                tool_res = gateway.traverse_graph(args.get("node_name", ""), role=role)
             elif action == "vector_search":
-                tool_res = gateway.vector_search(args.get("query_text", ""))
+                tool_res = gateway.vector_search(args.get("query_text", ""), role=role)
             elif action == "node_vector_search":
-                tool_res = gateway.node_vector_search(args.get("node_id", 1), args.get("query_text", ""))
+                tool_res = gateway.node_vector_search(args.get("node_id", 1), args.get("query_text", ""), role=role)
             elif action == "evolve_graph_node":
                 properties = args.get("properties", "{}")
                 if isinstance(properties, dict):
@@ -335,13 +354,15 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
                     description=args.get("description", ""),
                     skill_markdown=args.get("skill_markdown", ""),
                     properties=properties,
-                    target_edges=args.get("target_edges")
+                    target_edges=args.get("target_edges"),
+                    role=role
                 )
             elif action == "vectorize_document":
                 tool_res = gateway.execute_vector_mutation(
                     node_id=args.get("node_id", 1),
                     source_type=args.get("source_type", "email"),
-                    text_content=args.get("text_content", "")
+                    text_content=args.get("text_content", ""),
+                    role=role
                 )
             else:
                 tool_res = {"error": f"Unknown tool name: {action}"}
@@ -375,8 +396,12 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
         "user_query": question,
         "history": history_log,
         "final_answer": final_answer or "ReAct Loop concluded successfully.",
-        "current_schema": gateway.get_schema_info()
+        "current_schema": gateway.get_schema_info(role=role)
     }
+    if retrieved_products is not None:
+        audit_data["products"] = retrieved_products
+    if retrieved_orders is not None:
+        audit_data["orders"] = retrieved_orders
     
     ui_prompt = ChatPromptTemplate.from_messages([
         ("system", """You are the Lead Auditor & Vibe Coder UI Agent.
@@ -448,7 +473,7 @@ class CircuitBreaker:
 
 
 # ==================== 3. HIGH-FIDELITY DETERMINISTIC SIMULATOR (OFFLINE FALLBACK) ====================
-def simulate_agentic_workflow(question: str):
+def simulate_agentic_workflow(question: str, role: str = None, email: str = None):
     q = question.lower()
     trace = []
     data = {}
@@ -549,7 +574,7 @@ def simulate_agentic_workflow(question: str):
         })
         
         # Check Pydantic validation
-        res = gateway.execute_ddl(ddl_sql)
+        res = gateway.execute_ddl(ddl_sql, role=role)
         if "error" in res:
             trace.append({
                 "agent": "Shield Security Proxy",
@@ -565,7 +590,7 @@ def simulate_agentic_workflow(question: str):
         })
         
         # Inspect post-mutation schema
-        new_schema = gateway.get_schema_info()
+        new_schema = gateway.get_schema_info(role=role)
         data = {
             "status": "evolved",
             "applied_ddl": ddl_sql,
@@ -657,7 +682,8 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             description="Expedited shipping workflow for bulk freight orders",
             skill_markdown=skill_text,
             properties='{"priority": "high"}',
-            target_edges=[{"target_name": "Order Verification Workflow", "edge_type": "GOVERNS"}]
+            target_edges=[{"target_name": "Order Verification Workflow", "edge_type": "GOVERNS"}],
+            role=role
         )
         
         if "error" in res:
@@ -675,7 +701,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         })
         
         # Inspect post-mutation schema
-        new_schema = gateway.get_schema_info()
+        new_schema = gateway.get_schema_info(role=role)
         data = {
             "status": "evolved",
             "node_name": "Express Freight Delivery",
@@ -777,7 +803,8 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         res = gateway.execute_vector_mutation(
             node_id=3,
             source_type="policy",
-            text_content=text_content
+            text_content=text_content,
+            role=role
         )
         
         if "error" in res:
@@ -795,7 +822,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         })
         
         # Inspect post-mutation schema
-        new_schema = gateway.get_schema_info()
+        new_schema = gateway.get_schema_info(role=role)
         data = {
             "status": "evolved",
             "source_type": "POLICY",
@@ -890,7 +917,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "details": "Searching global vector partitions for rules related to 'high value transactions'."
         })
         
-        vector_res = gateway.vector_search("high value transaction limit", limit=1)
+        vector_res = gateway.vector_search("high value transaction limit", limit=1, role=role)
         trace.append({
             "agent": "Vector Index Agent",
             "action": "Semantic Matches Located",
@@ -903,7 +930,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "action": "Workflow Governance Traversal",
             "details": "Traversing workflow graph for 'High Value Transaction Policy' to identify governed workflow nodes."
         })
-        graph_res = gateway.traverse_graph("High Value Transaction Policy")
+        graph_res = gateway.traverse_graph("High Value Transaction Policy", role=role)
         governed_wf = graph_res[0]['target_name']
         
         # Load skill.md
@@ -923,7 +950,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "action": "Local Node Context Search",
             "details": "Searching localized vector partitions belonging strictly to 'High Value Transaction Policy' (ID 2)."
         })
-        local_context = gateway.node_vector_search(node_id=2, query_text="override waive limit", limit=2)
+        local_context = gateway.node_vector_search(node_id=2, query_text="override waive limit", limit=2, role=role)
         trace.append({
             "agent": "Vector Index Agent",
             "action": "Local Context Loaded",
@@ -942,7 +969,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         JOIN users u ON o.user_id = u.id 
         ORDER BY o.created_at DESC
         """
-        sql_res = gateway.execute_sql(sql_query)
+        sql_res = gateway.execute_sql(sql_query, role=role, email=email)
         trace.append({
             "agent": "Shield Security Proxy",
             "action": "Validate & Execute SQL",
@@ -1117,7 +1144,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "action": "Local Node Context Search",
             "details": "Retrieving localized document context mapped to replenishment node."
         })
-        local_context = gateway.node_vector_search(node_id=1, query_text="freight restriction chairs backlog", limit=2)
+        local_context = gateway.node_vector_search(node_id=1, query_text="freight restriction chairs backlog", limit=2, role=role)
         trace.append({
             "agent": "Vector Index Agent",
             "action": "Local Context Pulled",
@@ -1130,7 +1157,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "action": "Fetch Product Inventory",
             "details": "Querying products catalog and current stock levels."
         })
-        sql_res = gateway.execute_sql("SELECT name, category, price, stock_quantity FROM products")
+        sql_res = gateway.execute_sql("SELECT name, category, price, stock_quantity FROM products", role=role, email=email)
         data = {
             "products": sql_res,
             "skill_rules": skill_markdown,
@@ -1207,6 +1234,188 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         return EphemeralDashboard;
         """
         
+    elif "procure" in q or "pay" in q or "saga" in q or "purchase" in q:
+        from cognitive.graphs import ProcureToPaySaga
+        
+        # Determine product specs from query text
+        product_name = "Ergonomic Chair"
+        quantity = 10
+        price = 299.99
+        product_id = 1
+        
+        # Extract quantity digit
+        import re
+        qty_match = re.search(r"\b(\d+)\b", q)
+        if qty_match:
+            quantity = int(qty_match.group(1))
+            
+        if "standing desk" in q or "desk" in q:
+            product_name = "Standing Desk"
+            product_id = 2
+            price = 499.50
+        elif "keyboard" in q:
+            product_name = "Mechanical Keyboard"
+            product_id = 5
+            price = 120.00
+        elif "quantum" in q:
+            product_name = "Quantum Processor v1"
+            product_id = 6
+            price = 1250.00
+        elif "server" in q or "cluster" in q:
+            product_name = "Mainframe Core Server Cluster"
+            product_id = 7
+            price = 8999.00
+            
+        trace.append({
+            "agent": "Procure-to-Pay Coordinator",
+            "action": "Initiate Distributed Saga Transaction",
+            "details": f"Item: '{product_name}' (ID: {product_id}) | Quantity: {quantity} | Price: ${price:.2f} | Total: ${quantity*price:.2f}"
+        })
+        
+        if role is None:
+            role = current_user_role.get() or "customer"
+        if email is None:
+            email = current_user_email.get() or "charlie@example.com"
+        
+        # Find user ID matching authenticated context email
+        user_id = 3
+        with gateway.engine.connect() as conn:
+            user_row = conn.execute(text(f"SELECT id FROM users WHERE email = '{email}'")).fetchone()
+            if user_row:
+                user_id = user_row[0]
+                
+        # Run Saga Graph
+        saga = ProcureToPaySaga(
+            product_id=product_id,
+            quantity=quantity,
+            price=price,
+            user_id=user_id,
+            agent_name="Procure-to-Pay Saga Worker"
+        )
+        saga_res = saga.run()
+        
+        # Append saga logs to trace stream
+        for log in saga_res["logs"]:
+            if "Success" in log:
+                action = "Saga State Success"
+            elif "Failure" in log or "Error" in log:
+                action = "Saga State Failure"
+            elif "Compensat" in log:
+                action = "Saga State Compensating"
+            else:
+                action = "Saga Step Trace"
+                
+            trace.append({
+                "agent": "Procure-to-Pay Saga Worker",
+                "action": action,
+                "details": log
+            })
+            
+        data = {
+            "product_name": product_name,
+            "quantity": quantity,
+            "price": price,
+            "total_amount": quantity * price,
+            "status": saga_res["status"],
+            "logs": saga_res["logs"],
+            "error": saga_res["error"],
+            "order_id": saga_res["order_id"]
+        }
+        
+        trace.append({
+            "agent": "Vibe Coder UI Agent",
+            "action": "Generate Ephemeral Saga Dashboard",
+            "details": "Compiling step-by-step transaction state tracker visualizer."
+        })
+        
+        ui_code = """
+        const EphemeralDashboard = ({ data, onAction }) => {
+            const status = data.status || "";
+            const logs = data.logs || [];
+            const isCompensated = status === "compensated";
+            
+            return (
+                <div className="space-y-6 animate-fadeIn">
+                    {/* Header */}
+                    <div className={`flex justify-between items-center bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border shadow-lg \${
+                        isCompensated 
+                            ? 'border-rose-500/20' 
+                            : 'border-emerald-500/20'
+                    }`}>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-200">Procure-to-Pay Transaction Saga Control</h2>
+                            <p className="text-xs text-slate-400">Agentic Saga pattern distributed transaction audit</p>
+                        </div>
+                        <span className={`px-3 py-1 border rounded-full text-xs font-bold font-mono uppercase \${
+                            isCompensated 
+                                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse' 
+                                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        }`}>
+                            Status: {status}
+                        </span>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-mono">Product Item</span>
+                            <span className="text-xs font-bold text-slate-200">{data.product_name}</span>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-mono">Order Size</span>
+                            <span className="text-xs font-bold text-slate-200">{data.quantity} Units</span>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-mono">Total Capital Outlay</span>
+                            <span className={`text-xs font-extrabold \${isCompensated ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                \${data.total_amount.toFixed(2)}
+                            </span>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-mono">Order Record ID</span>
+                            <span className="text-xs font-bold text-slate-200 font-mono">#{data.order_id || "N/A"}</span>
+                        </div>
+                    </div>
+
+                    {/* Saga Steps execution trail */}
+                    <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
+                            <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                            <h3 className="font-semibold text-slate-200 text-xs">Distributed Transaction Consensus Logs</h3>
+                        </div>
+                        
+                        <div className="space-y-3 max-h-[220px] overflow-y-auto pr-2">
+                            {logs.map((log, idx) => {
+                                const isErr = log.includes("Failure") || log.includes("Error");
+                                const isComp = log.includes("Compensat");
+                                return (
+                                    <div key={idx} className="flex gap-3 text-xs leading-normal border-l border-slate-900 pl-4 py-0.5 relative">
+                                        <div className={`absolute -left-[4.5px] top-1.5 w-2.5 h-2.5 rounded-full \${
+                                            isErr ? 'bg-rose-500' : isComp ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+                                        }`} />
+                                        <p className={`\${
+                                            isErr ? 'text-rose-400 font-semibold' : isComp ? 'text-amber-400' : 'text-slate-300'
+                                        } font-mono`}>
+                                            {log}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {isCompensated && (
+                            <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-xs text-rose-400 flex flex-col gap-1.5">
+                                <span className="font-bold uppercase tracking-wider font-mono">Rollback Reason:</span>
+                                <p className="text-rose-300/80 leading-relaxed font-mono">"{data.error}"</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+        return EphemeralDashboard;
+        """
+
     else:
         # Default workflow
         trace.append({
@@ -1214,15 +1423,15 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "action": "Semantic Policy Lookup",
             "details": f"Attempting semantic match for request: '{question}'."
         })
-        vector_res = gateway.vector_search(question)
+        vector_res = gateway.vector_search(question, role=role)
         
         trace.append({
             "agent": "Tabular SQL Agent",
             "action": "Query Users & Orders Summary",
             "details": "Gathering operational high level business metrics."
         })
-        users_count = len(gateway.execute_sql("SELECT id FROM users"))
-        orders_sum = gateway.execute_sql("SELECT SUM(total_amount) as total FROM orders")[0]['total']
+        users_count = len(gateway.execute_sql("SELECT id FROM users", role=role, email=email))
+        orders_sum = gateway.execute_sql("SELECT SUM(total_amount) as total FROM orders", role=role, email=email)[0]['total']
         
         data = {
             "total_users": users_count,
@@ -1433,14 +1642,17 @@ def local_worker():
                 custom_id = os.getenv("CUSTOM_CLIENT_ID")
                 custom_secret = os.getenv("CUSTOM_CLIENT_SECRET")
                 
-                if (custom_id and custom_secret) or api_key:
+                q_lower = question.lower()
+                is_saga_query = any(k in q_lower for k in ["procure", "pay", "saga", "purchase"])
+                
+                if not is_saga_query and ((custom_id and custom_secret) or api_key):
                     try:
-                        result = run_real_llm_agent(question)
+                        result = run_real_llm_agent(question, role=role, email=email)
                     except Exception as llm_err:
                         print(f"[Local Worker] Real LLM agent failed: {llm_err}. Falling back to simulator.", flush=True)
-                        result = simulate_agentic_workflow(question)
+                        result = simulate_agentic_workflow(question, role=role, email=email)
                 else:
-                    result = simulate_agentic_workflow(question)
+                    result = simulate_agentic_workflow(question, role=role, email=email)
                 
                 # Success!
                 task_db = db.query(Task).filter(Task.task_id == task_id).first()
@@ -1577,12 +1789,11 @@ async def execute_action(req: ActionRequest, user: dict = Depends(get_authentica
         if action_id == "approve_waiver":
             order_id = params.get("order_id")
             engine = gateway.engine
-            with engine.connect() as conn:
+            with engine.begin() as conn:
                 conn.execute(
                     text("UPDATE orders SET status = 'approved' WHERE id = :id"),
                     {"id": order_id}
                 )
-                conn.commit()
             
             return {
                 "status": "success",
@@ -1593,12 +1804,11 @@ async def execute_action(req: ActionRequest, user: dict = Depends(get_authentica
         elif action_id == "reorder_stock":
             product_name = params.get("product_name")
             engine = gateway.engine
-            with engine.connect() as conn:
+            with engine.begin() as conn:
                 conn.execute(
                     text("UPDATE products SET stock_quantity = stock_quantity + 50 WHERE name = :name"),
                     {"name": product_name}
                 )
-                conn.commit()
             
             # Log this override event into the compliance ledger
             gateway.log_audit_event(
@@ -1691,7 +1901,7 @@ async def get_schema(user: dict = Depends(get_authenticated_user)):
     try:
         if user["role"] == "customer":
             raise HTTPException(status_code=403, detail="Forbidden: Access restricted to employees and administrators.")
-        return {"schema": gateway.get_schema_info()}
+        return {"schema": gateway.get_schema_info(role=user.get("role"))}
     except HTTPException:
         raise
     except Exception as e:
@@ -1709,8 +1919,22 @@ async def get_graph(user: dict = Depends(get_authenticated_user)):
             if not node_check:
                 return {"nodes": [], "edges": []}
             
-            nodes_res = conn.execute(text("SELECT id, label, name, description, properties FROM graph_nodes;")).fetchall()
-            edges_res = conn.execute(text("SELECT id, source_id, target_id, edge_type FROM graph_edges;")).fetchall()
+            clearance_map = {"admin": 3, "employee": 2, "customer": 1}
+            clearance = clearance_map.get(user["role"], 0)
+            
+            nodes_res = conn.execute(
+                text("SELECT id, label, name, description, properties FROM graph_nodes WHERE clearance_level <= :clearance;"),
+                {"clearance": clearance}
+            ).fetchall()
+            
+            edges_res = conn.execute(
+                text("""
+                    SELECT id, source_id, target_id, edge_type FROM graph_edges 
+                    WHERE source_id IN (SELECT id FROM graph_nodes WHERE clearance_level <= :clearance)
+                      AND target_id IN (SELECT id FROM graph_nodes WHERE clearance_level <= :clearance)
+                """),
+                {"clearance": clearance}
+            ).fetchall()
             
             nodes = []
             for row in nodes_res:
