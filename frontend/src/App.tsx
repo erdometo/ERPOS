@@ -33,9 +33,16 @@ const DynamicRenderer: React.FC<{
         throw new Error("Babel compiler is loading from CDN. Please wait a moment...");
       }
 
+      // Strip ES6 export and import statements which are not valid inside a function evaluator block
+      // Clean them from the raw code *before* wrapping to prevent Babel parser errors
+      const cleanRawCode = code
+        .replace(/export\s+default\s+[\w\d_]+;?/g, '')
+        .replace(/export\s+/g, '')
+        .replace(/import\s+[\s\S]*?from\s+['"].*?['"];?/g, '');
+
       // Wrap code in a parent function to avoid top-level return issues in Babel parser
       const wrappedCode = `const __componentWrapper = (React, data, onAction) => {
-        ${code}
+        ${cleanRawCode}
       };`;
 
       // Compile JSX using Babel
@@ -44,10 +51,7 @@ const DynamicRenderer: React.FC<{
         presets: ['react'],
       }).code || '';
 
-      // Strip ES6 export statements which are not valid inside a function evaluator block
-      const cleanCompiled = compiled
-        .replace(/export\s+default\s+[\w\d_]+;?/g, '')
-        .replace(/export\s+/g, '');
+      const cleanCompiled = compiled;
 
       // Safely evaluate code in a function context passing React, data, and onAction
       const renderFn = new Function('React', 'data', 'onAction', `
