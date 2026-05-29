@@ -748,6 +748,16 @@ class ShieldGateway:
             # Validate query and parameters using GeneralizedActionMutation
             validated = GeneralizedActionMutation(query=sql_query_str.strip(), params=params)
             
+            # Simple bind parameter presence validation to prevent database crashes
+            import re
+            bind_pattern = re.compile(r":([a-zA-Z0-9_]+)")
+            missing_params = []
+            for param_name in bind_pattern.findall(validated.query):
+                if param_name not in validated.params or validated.params[param_name] is None or validated.params[param_name] == "":
+                    missing_params.append(param_name)
+            if missing_params:
+                raise ValueError(f"Missing or invalid value for bind parameter(s): {', '.join(missing_params)}")
+                
             with self.engine.connect() as conn:
                 conn.execute(text(validated.query), validated.params)
                 conn.commit()
@@ -774,7 +784,15 @@ class ShieldGateway:
             with self.engine.connect() as conn:
                 result = conn.execute(text(validated.query))
                 columns = result.keys()
-                return [dict(zip(columns, row)) for row in result.fetchall()]
+                rows = []
+                for row in result.fetchall():
+                    d = dict(zip(columns, row))
+                    if 'id' in d and 'order_id' not in d:
+                        d['order_id'] = d['id']
+                    if 'order_id' in d and 'id' not in d:
+                        d['id'] = d['order_id']
+                    rows.append(d)
+                return rows
         except Exception as e:
             return {"error": f"SQL Execution Blocked: {str(e)}"}
 

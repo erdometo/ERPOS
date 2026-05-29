@@ -593,6 +593,18 @@ export default function App() {
             orderId = params;
           }
         }
+        if (orderId === null || orderId === undefined || orderId === '') {
+          const inputId = window.prompt("Order ID was not specified by the UI. Please enter the Order ID to approve:");
+          if (inputId) {
+            orderId = parseInt(inputId, 10);
+            if (isNaN(orderId)) {
+              setNotification({ message: 'Invalid Order ID entered.', type: 'error' });
+              return;
+            }
+          } else {
+            return;
+          }
+        }
         body = {
           query: "UPDATE orders SET status = 'approved' WHERE id = :id",
           params: { id: orderId },
@@ -605,6 +617,14 @@ export default function App() {
             productName = params.product_name ?? params.name ?? Object.values(params)[0];
           } else {
             productName = params;
+          }
+        }
+        if (productName === null || productName === undefined || productName === '') {
+          const inputName = window.prompt("Product Name was not specified by the UI. Please enter the Product Name to reorder:");
+          if (inputName) {
+            productName = inputName;
+          } else {
+            return;
           }
         }
         body = {
