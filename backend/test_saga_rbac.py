@@ -111,7 +111,8 @@ def test_saga_workflow():
     customer_token = get_auth_token("charlie@example.com")
     
     # Get current stock of Ergonomic Chair
-    db_file = "erp_database.db"
+    import os
+    db_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "erp_database.db")
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     cursor.execute("SELECT stock_quantity FROM products WHERE id = 1")

@@ -40,12 +40,10 @@ def seed_enterprise():
     session.commit()
 
     print("[*] Clearing external Graph and Vector databases...")
-    try:
-        from middleware import ShieldGateway
-        gateway = ShieldGateway()
-        gateway.clear_graph_and_vector_stores()
-    except Exception as e:
-        print(f"Warning: Could not clear external stores: {e}")
+    from middleware import ShieldGateway
+    gateway = ShieldGateway()
+    gateway.graph_adapter.clear_all()
+    gateway.vector_adapter.clear_all()
 
     # 1. Seed Users (Corporate Roles + Diverse Customers)
     print("[*] Seeding enterprise-grade users and employees...")
@@ -414,13 +412,10 @@ Triggers procurement flows when active stock drop below critical thresholds.
         current_hash = new_hash
 
     # Sync graph nodes and vector partitions to the active adapters
-    try:
-        from middleware import ShieldGateway
-        print("[*] Re-synchronizing graph and vector database layers...")
-        gateway = ShieldGateway()
-        gateway.sync_from_sqlite_if_needed()
-    except Exception as e:
-        print(f"Warning: Synchronization failed: {e}")
+    from middleware import ShieldGateway
+    print("[*] Re-synchronizing graph and vector database layers...")
+    gateway = ShieldGateway()
+    gateway.sync_from_sqlite_if_needed()
 
     print("\n==================================================================")
     print("Enterprise-grade SAP-like database seed completed successfully!")

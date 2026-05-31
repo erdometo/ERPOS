@@ -161,7 +161,8 @@ def test_generalized_actions():
     
     # 5. Test Tamper Detection (with Employee token)
     print("Testing Cryptographic Tamper Detection...")
-    db_file = "erp_database.db"
+    import os
+    db_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "erp_database.db")
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     cursor.execute("UPDATE audit_ledger SET action_details = 'tampered details' WHERE id = 2")

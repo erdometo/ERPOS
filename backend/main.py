@@ -104,6 +104,7 @@ class LoginRequest(BaseModel):
 
 # ==================== 1. REAL LLM AGENT ROUTING & EXECUTION ENGINE ====================
 def run_real_llm_agent(question: str, role: str = None, email: str = None):
+    log_worker("Entering run_real_llm_agent")
     from langchain_core.prompts import ChatPromptTemplate
     
     custom_id = os.getenv("CUSTOM_CLIENT_ID")
@@ -111,16 +112,19 @@ def run_real_llm_agent(question: str, role: str = None, email: str = None):
     custom_model = os.getenv("CUSTOM_MODEL_NAME", "gemini-3-flash")
     
     if custom_id and custom_secret:
+        log_worker("Initializing ChatCustom client...")
         from custom_client import ChatCustom
         llm = ChatCustom(client_id=custom_id, client_secret=custom_secret, model_name=custom_model, temperature=0.1)
         model_display = f"Custom LLM ({custom_model})"
     else:
+        log_worker("Initializing ChatGoogleGenerativeAI client...")
         from langchain_google_genai import ChatGoogleGenerativeAI
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY or CUSTOM client credentials are not configured.")
         llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, google_api_key=api_key)
         model_display = "gemini-3.5-flash"
+    log_worker("LLM client initialized successfully")
         
     trace = []
     cb = CircuitBreaker(max_cycles=6)
@@ -210,6 +214,7 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
         history_str = "\n".join(history_log) if history_log else "No history yet."
         
         # Invoke LLM
+        log_worker(f"ReAct Loop: cycle={cycle}. Invoking LLM chain...")
         res_obj = chain.invoke({
             "tools": tools_description,
             "schema": current_schema,
@@ -217,6 +222,7 @@ Never run destructive queries (no DROP/DELETE/TRUNCATE). Do not output markdown 
             "history": history_str
         })
         res = get_content_str(res_obj).strip()
+        log_worker(f"ReAct Loop: cycle={cycle}. Received LLM response: {repr(res[:100])}...")
         print(f"[DEBUG run_real_llm_agent] Raw LLM Response: {repr(res)}", flush=True)
         
         # Parse Thought, Action, Arguments
@@ -918,10 +924,12 @@ Governs rapid logistics dispatch of high value or high priority product freight 
         })
         
         vector_res = gateway.vector_search("high value transaction limit", limit=1, role=role)
+        vector_text = vector_res[0]['text_content'] if (isinstance(vector_res, list) and len(vector_res) > 0) else "No semantic matches located in vector partitions."
+        vector_sim = vector_res[0]['similarity'] if (isinstance(vector_res, list) and len(vector_res) > 0) else 0.0
         trace.append({
             "agent": "Vector Index Agent",
             "action": "Semantic Matches Located",
-            "details": f"Identified node context: '{vector_res[0]['text_content']}' with similarity {vector_res[0]['similarity']}."
+            "details": f"Identified node context: '{vector_text}' with similarity {vector_sim}."
         })
 
         # Trace Step 3: Graph Traversal to retrieve governing node
@@ -931,7 +939,7 @@ Governs rapid logistics dispatch of high value or high priority product freight 
             "details": "Traversing workflow graph for 'High Value Transaction Policy' to identify governed workflow nodes."
         })
         graph_res = gateway.traverse_graph("High Value Transaction Policy", role=role)
-        governed_wf = graph_res[0]['target_name']
+        governed_wf = graph_res[0]['target_name'] if (isinstance(graph_res, list) and len(graph_res) > 0) else "Order Verification Workflow"
         
         # Load skill.md
         with gateway.engine.connect() as conn:
@@ -1606,12 +1614,23 @@ def try_enqueue_rabbitmq(task_id: str, query: str, role: str, email: str) -> boo
         return False
 
 
+def log_worker(msg):
+    try:
+        from datetime import datetime
+        with open("c:/Users/ASUS/Desktop/ERPOS/backend/local_worker.log", "a", encoding="utf-8") as f:
+            f.write(f"{datetime.utcnow().isoformat()} - {msg}\n")
+    except Exception:
+        pass
+
 def local_worker():
     from datetime import datetime
+    log_worker("local_worker thread started")
     while True:
         try:
+            log_worker("Waiting for task in queue...")
             task_payload = local_task_queue.get()
             if task_payload is None:
+                log_worker("Received None, exiting thread")
                 break
             
             task_id = task_payload["task_id"]
@@ -1619,6 +1638,7 @@ def local_worker():
             role = task_payload["role"]
             email = task_payload["email"]
             
+            log_worker(f"Starting task {task_id}: '{question}' (role={role}, email={email})")
             print(f"[Local Worker] Starting task {task_id}: '{question}' (role={role}, email={email})", flush=True)
             
             # Update status to processing
@@ -1660,10 +1680,12 @@ def local_worker():
                     task_db.status = "completed"
                     task_db.result_json = json.dumps(result)
                     task_db.finished_at = datetime.utcnow()
+                    log_worker(f"Task {task_id} completed successfully in DB")
                     db.commit()
                     print(f"[Local Worker] Task {task_id} completed successfully.", flush=True)
                     
             except Exception as e:
+                log_worker(f"Error processing task {task_id}: {e}")
                 print(f"[Local Worker] Error processing task {task_id}: {e}", flush=True)
                 task_db = db.query(Task).filter(Task.task_id == task_id).first()
                 if task_db:
@@ -1678,6 +1700,7 @@ def local_worker():
                 db.close()
                 local_task_queue.task_done()
         except Exception as queue_err:
+            log_worker(f"Unexpected error in queue loop: {queue_err}")
             print(f"[Local Worker] Unexpected error in queue loop: {queue_err}", flush=True)
 
 
@@ -1718,6 +1741,7 @@ async def execute_query(req: QueryRequest, user: dict = Depends(get_authenticate
         
         # Try pushing to RabbitMQ first
         pushed = try_enqueue_rabbitmq(task_id, req.question, user.get("role"), user.get("email"))
+        log_worker(f"execute_query enqueued task_id={task_id}, pushed_to_rabbitmq={pushed}")
         if not pushed:
             # Push to the local in-memory queue
             local_task_queue.put({
@@ -1726,6 +1750,7 @@ async def execute_query(req: QueryRequest, user: dict = Depends(get_authenticate
                 "role": user.get("role"),
                 "email": user.get("email")
             })
+            log_worker(f"Pushed task_id={task_id} to local_task_queue")
             
         return {"status": "pending", "task_id": task_id}
     except Exception as e:
@@ -1968,4 +1993,6 @@ async def get_graph(user: dict = Depends(get_authenticated_user)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

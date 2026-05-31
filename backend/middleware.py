@@ -17,7 +17,7 @@ from auth import current_user_role, current_user_email
 from core.db import (
     engine, DB_FILE_PATH, log_audit_event, verify_ledger_integrity, secure_sql_query
 )
-from storage.neo4j_client import Neo4jGraphAdapter, JSONGraphAdapter
+from storage.neo4j_client import Neo4jGraphAdapter
 from storage.qdrant_client import QdrantVectorAdapter
 
 # Determine paths
@@ -116,17 +116,18 @@ class ShieldGateway:
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         neo4j_user = os.getenv("NEO4J_USER") or os.getenv("NEO4J_USERNAME") or "neo4j"
         neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
-        try:
-            print(f"Connecting to Neo4j at {neo4j_uri}...")
-            self.graph_adapter = Neo4jGraphAdapter(neo4j_uri, neo4j_user, neo4j_password)
-            print("Successfully connected to Neo4j.")
-        except Exception:
-            print("[Neo4j] Standalone server not detected. Falling back to local JSON graph database.", flush=True)
-            json_db_path = os.path.join(CURRENT_DIR, "graph_db.json")
-            self.graph_adapter = JSONGraphAdapter(json_db_path)
+        print(f"Connecting to Neo4j at {neo4j_uri}...")
+        self.graph_adapter = Neo4jGraphAdapter(neo4j_uri, neo4j_user, neo4j_password)
+        print("Successfully connected to Neo4j.")
             
         # Instantiate Vector adapter
         self.vector_adapter = QdrantVectorAdapter(CURRENT_DIR)
+        print("Connecting to Qdrant...")
+        # Verify connection immediately to fail loudly if Qdrant container is absent or unsuccessful
+        qdrant_conn_test = self.vector_adapter._get_client()
+        qdrant_conn_test.close()
+        print("Successfully connected to Qdrant.")
+
         
         # Sync from SQLite if needed
         try:

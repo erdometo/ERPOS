@@ -19,23 +19,27 @@ class QdrantVectorAdapter:
         qdrant_port = os.getenv("QDRANT_PORT")
         qdrant_api_key = os.getenv("QDRANT_API_KEY")
         
-        client = None
-        if qdrant_host:
-            try:
-                port = int(qdrant_port) if qdrant_port else 6333
-                print(f"Connecting to Qdrant server at {qdrant_host}:{port}...")
-                client = QdrantClient(host=qdrant_host, port=port, api_key=qdrant_api_key, timeout=5)
-                client.get_collections()
-                print("Successfully connected to Qdrant server.")
-            except Exception as e:
-                print(f"Failed to connect to Qdrant server: {e}. Falling back to local persistent Qdrant database.")
-                client = None
-                
-        if not client:
-            qdrant_db_path = os.path.join(self.current_dir, "qdrant_db")
-            print(f"Initializing local persistent Qdrant client at {qdrant_db_path}...")
-            client = QdrantClient(path=qdrant_db_path)
-        return client
+        if not qdrant_host:
+            raise ConnectionError("QDRANT_HOST environment variable is missing.")
+        if not qdrant_port:
+            raise ConnectionError("QDRANT_PORT environment variable is missing.")
+            
+        try:
+            port = int(qdrant_port)
+        except ValueError as e:
+            raise ConnectionError(f"Invalid QDRANT_PORT environment variable: {qdrant_port}") from e
+            
+        print(f"Connecting to Qdrant server at {qdrant_host}:{port}...")
+        try:
+            client = QdrantClient(host=qdrant_host, port=port, api_key=qdrant_api_key, timeout=5)
+            # Verify connection
+            client.get_collections()
+            print("Successfully connected to Qdrant server.")
+            return client
+        except Exception as e:
+            print(f"Failed to connect to Qdrant server: {e}")
+            raise ConnectionError(f"Failed to connect to Qdrant server: {e}") from e
+
 
     def _ensure_collection(self, client, dim: int):
         collection_name = f"erp_vectors_{dim}"

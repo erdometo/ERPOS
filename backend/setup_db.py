@@ -19,11 +19,8 @@ def hash_password(password: str) -> str:
 def init_db():
     # Drop dynamic courier_shipments table if it exists
     with engine.connect() as conn:
-        try:
-            conn.execute(text("DROP TABLE IF EXISTS courier_shipments"))
-            conn.commit()
-        except Exception:
-            pass
+        conn.execute(text("DROP TABLE IF EXISTS courier_shipments"))
+        conn.commit()
     # Drop all tables and recreate them using unified metadata
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
@@ -44,13 +41,11 @@ def seed_data(engine):
     session.query(Task).delete()
     session.commit()
 
-    # Clear external/fallback Neo4j and Qdrant graph and vector stores
-    try:
-        from middleware import ShieldGateway
-        gateway = ShieldGateway()
-        gateway.clear_graph_and_vector_stores()
-    except Exception as e:
-        print(f"Warning: Could not clear external graph and vector stores: {e}")
+    # Clear external Neo4j and Qdrant graph and vector stores
+    from middleware import ShieldGateway
+    gateway = ShieldGateway()
+    gateway.graph_adapter.clear_all()
+    gateway.vector_adapter.clear_all()
 
     # Seed Users
     hashed_pwd = hash_password("password123")

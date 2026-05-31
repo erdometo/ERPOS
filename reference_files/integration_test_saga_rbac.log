@@ -1,0 +1,21 @@
+
+=================== Running RBAC Dynamic Clearance Tests ===================
+[Test 1] Customer Product Check (Should filter out clearance 2 & 3 items)...
+Customer sees 5 products: ['Ergonomic Chair', 'Standing Desk', 'Laptop Stand', 'Wireless Mouse', 'Mechanical Keyboard']
+[Test 2] Employee Product Check (Should see Employee items but NOT Admin items)...
+Employee sees 6 products: ['Ergonomic Chair', 'Standing Desk', 'Laptop Stand', 'Wireless Mouse', 'Mechanical Keyboard', 'Quantum Processor v1']
+[Test 3] Admin Product Check (Should see ALL products)...
+Admin sees 7 products: ['Ergonomic Chair', 'Standing Desk', 'Laptop Stand', 'Wireless Mouse', 'Mechanical Keyboard', 'Quantum Processor v1', 'Mainframe Core Server Cluster']
+RBAC Dynamic Clearance checks passed successfully!
+
+=================== Running Agentic Saga Transaction Tests ===================
+Initial Ergonomic Chair stock: 50
+[Saga Test 1] Executing Compliant Purchase (Total: 1 * 299.99 = $299.99 <= $500 limit)...
+Compliant Saga status: completed
+Updated Ergonomic Chair stock: 49
+
+Initial Standing Desk stock: 30
+[Saga Test 2] Executing Non-Compliant Purchase (Total: 2 * 499.50 = $999.00 > $500 limit)...
+Rollback Saga status: compensated, Expected Error: Payment Authorization Denied: Order total $999.00 exceeds compliance limit of $500.00.
+Updated Standing Desk stock after Saga Rollback: 30
+Agentic Saga Pattern transaction checks passed successfully!

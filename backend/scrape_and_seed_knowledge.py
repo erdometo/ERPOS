@@ -319,12 +319,10 @@ def main():
     session.query(VectorPartition).delete()
     session.commit()
 
-    try:
-        from middleware import ShieldGateway
-        gateway = ShieldGateway()
-        gateway.clear_graph_and_vector_stores()
-    except Exception as e:
-        print(f"Warning: Could not clear external databases: {e}")
+    from middleware import ShieldGateway
+    gateway = ShieldGateway()
+    gateway.graph_adapter.clear_all()
+    gateway.vector_adapter.clear_all()
 
     # --- Seed Baseline Interactive Nodes for Saga & RBAC first ---
     print("[*] Re-seeding core interactive baseline rules...")
@@ -504,13 +502,10 @@ def main():
     session.commit()
 
     # Re-synchronize graph/vector stores
-    try:
-        from middleware import ShieldGateway
-        print("[*] Re-synchronizing graph and vector database layers...")
-        gateway = ShieldGateway()
-        gateway.sync_from_sqlite_if_needed()
-    except Exception as e:
-        print(f"Warning: Synchronization failed: {e}")
+    from middleware import ShieldGateway
+    print("[*] Re-synchronizing graph and vector database layers...")
+    gateway = ShieldGateway()
+    gateway.sync_from_sqlite_if_needed()
 
     print("\n==================================================================")
     print("Wikipedia ERP Knowledge Scraped & Synced successfully!")
