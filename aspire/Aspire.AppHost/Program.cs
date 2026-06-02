@@ -53,7 +53,7 @@ public class MyConfigureOptions<T> : IConfigureOptions<T> where T : class
         if (type.FullName == "Aspire.Hosting.Dcp.DcpOptions")
         {
             type.GetProperty("CliPath")?.SetValue(options, @"C:\Users\ASUS\.nuget\packages\aspire.hosting.orchestration.win-x64\8.1.0\tools\dcp.exe");
-            type.GetProperty("DashboardPath")?.SetValue(options, @"C:\Users\ASUS\.nuget\packages\aspire.dashboard.sdk.win-x64\8.0.0\tools");
+            type.GetProperty("DashboardPath")?.SetValue(options, @"C:\Users\ASUS\.nuget\packages\aspire.dashboard.sdk.win-x64\8.0.0\tools\Aspire.Dashboard.exe");
         }
     }
 }

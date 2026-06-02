@@ -64,15 +64,31 @@ graph TD
 
 ## 🚀 Running the Terminal
 
+The terminal can be launched in two configurations:
+
+### 1. Standalone Developer Mode
+Runs the Vite frontend directly against a local API endpoint on port 8000:
 1. **Install Dependencies**:
    ```bash
    npm install
    ```
-
 2. **Start Dev Server**:
    ```bash
    npm run dev
    ```
-
 3. **Access Application**:
    Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### 2. Orchestrated Microservices Mode (.NET Aspire)
+When running inside the .NET Aspire stack, the AppHost automatically orchestrates the frontend node process:
+1. **Startup**: Managed via the root `dotnet run` command under `aspire/Aspire.AppHost/`.
+2. **Port Binding**: Port `5173` is assigned dynamically, routing HTTP calls directly to the FastAPI service.
+3. **Telemetry Logs**: Standard Vite dev-server outputs are streamed directly to the OpenTelemetry trace panel in the Aspire Dashboard on port `18888`.
+
+---
+
+## ⚙️ Compilation & Parameter Validation Mechanics
+
+*   **Babel Transforming**: Before compilation via `@babel/standalone`, the UI parser strips out ES6 `import` and `export` statements dynamically, converting modular exports to inline component registrations to avoid runtime evaluations errors in browser sandbox.
+*   **Dynamic Parameter Prompter**: When user clicks on a generated UI action (e.g. *Approve Credit*, *Reorder Stock*), the client-side execution gateway validates necessary schema parameters. If parameters are missing, it falls back to prompting the user or semantically extracting placeholders from current agent traces to prevent invalid database transactions.
+
