@@ -2,7 +2,7 @@
 
 This is the core execution kernel of the **OmniGate ERP OS**, powered by a FastAPI server, a multi-model database gateway, and an autonomous ReAct agent loop. It coordinates database operations across SQL, Graph, and Vector databases with asynchronous task workers.
 
-This backend supports two run modes: **Local Failover Mode** (zero-dependency, disk-based SQLite/JSON databases) and **Production Orchestration Mode** (.NET Aspire running with standalone host databases).
+This backend is configured to run in the orchestrated **Production Orchestration Mode** (.NET Aspire running with standalone host databases) to support production-grade workloads without database failover fallbacks.
 
 ---
 
@@ -18,8 +18,8 @@ Acts as a sandbox proxy between executing AI agents and the database layers, enf
 *   **Generalized Action Mutation Parser**: Captures database requests through Pydantic (`GeneralizedActionMutation`). It restricts query verbs to safe mutations (`INSERT` and `UPDATE`), preventing execution of destructive actions (`DELETE`, `DROP`, `TRUNCATE`, `RENAME TO`).
 *   **Database Schema Evolution Gate**: Allows DBA agents to perform additive schema mutations (`CREATE TABLE`, `ALTER TABLE`) to adapt the system dynamically while blocking table drops.
 *   **System Integrity Guard**: Blocks queries targeting system metadata tables or the compliance ledger (`audit_ledger`).
-*   **Qdrant Vector Adapter**: Integrates similarity search queries using the unified `query_points` method. Supports localized searches targeting a specific `node_id` via payload field matching. It connects to the standalone Qdrant database (port 6333) and automatically falls back to a local persistent client under `./qdrant_db` when the server is unavailable.
-*   **Neo4j Graph Adapter**: Translates traversal instructions to Cypher statements using the official python driver. It connects to the standalone Neo4j database (port 7687) and automatically falls back to a local file-based JSON database (`graph_db.json`) that translates Cypher query actions on-the-fly when the server is unavailable.
+*   **Qdrant Vector Adapter**: Integrates similarity search queries using the unified `query_points` method. Supports localized searches targeting a specific `node_id` via payload field matching. It connects directly to the standalone Qdrant database on port `6333`.
+*   **Neo4j Graph Adapter**: Translates traversal instructions to Cypher statements using the official python driver. It connects directly to the standalone Neo4j database on port `7687`.
 *   **Cryptographic Ledger Builder**: Computes SHA-256 signatures for every state change. Each transaction block is signed using:
     `row_hash = SHA256(id + timestamp + action_type + agent_name + action_details + governing_node_id + prev_hash)`
 

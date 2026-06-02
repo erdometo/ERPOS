@@ -44,15 +44,6 @@ graph TD
 
 ---
 
-## 🔄 Zero-Dependency Hybrid Failover Engine
-
-To ensure the system works out-of-the-box on developer systems that lack running standalone databases or the .NET SDK, we designed a **Hybrid Fallback Engine** in `middleware.py`:
-*   **Qdrant**: Falls back to local disk-based persistence (`QdrantClient(path="qdrant_db")`) if port `6333` connection fails.
-*   **Neo4j**: Automatically fails over to a local file-based JSON database (`graph_db.json`) if connection to the port `7687` server fails, translating Cypher queries on-the-fly.
-*   **RabbitMQ**: Automatically routes tasks to an in-process thread-safe queue (`queue.Queue`) if RabbitMQ connection fails, processing them asynchronously in a daemon worker thread.
-
----
-
 ## 🔒 Security & Sandbox Safeguards
 
 ### 1. The Shield Gateway Middleware
@@ -75,31 +66,6 @@ To prevent runaway token consumption or infinite LLM execution loops, the system
 You can run OmniGate in two modes:
 *   **Live AI Mode**: If a `GEMINI_API_KEY` (or custom credentials) is provided in `backend/.env`, the system utilizes Gemini for dynamic DDL formulation, compliance auditing, and JSX UI generation.
 *   **High-Fidelity Offline Simulator**: If no key is present, the kernel falls back to a robust local simulator. It processes the exact SQLite reads, graph traversals, and vector filtering, but outputs deterministic JSX to ensure the demo remains fully functional offline.
-
-### Local Failover Startup (No Standalone DBs/Orchestration Required)
-
-We provide a root launcher script [start_local.py](file:///c:/Users/ASUS/Desktop/ERPOS/start_local.py) that concurrently runs the FastAPI server, background worker threads, and Vite frontend.
-
-```bash
-# Clone or open the workspace root
-cd ERPOS/
-
-# Install python packages in your environment:
-cd backend/
-..\venv\Scripts\activate
-pip install -r requirements.txt
-
-# Initial setup (Seeds the SQLite, JSON graph, and Qdrant local files)
-python setup_db.py
-
-# Install frontend dependencies:
-cd ../frontend/
-npm install
-
-# Start both services concurrently from the root directory:
-cd ..
-python start_local.py
-```
 
 ### Production Orchestration Startup (.NET Aspire)
 
