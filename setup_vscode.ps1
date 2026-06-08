@@ -3,13 +3,7 @@
 
 $extensions = @(
     "ms-python.python",              # Python language support
-    "ms-python.vscode-pylance",       # Fast, feature-rich language support for Python
-    "ms-dotnettools.csharp",          # C# language support
-    "ms-dotnettools.csdevkit",        # C# Dev Kit (for .NET Aspire orchestration)
-    "Neo4j.cypher",                   # Neo4j Cypher syntax support
-    "esbenp.prettier-vscode",         # Prettier code formatting
-    "dbaeumer.vscode-eslint",         # ESLint support for frontend
-    "bierner.markdown-mermaid"        # Markdown Mermaid preview support
+    "ms-dotnettools.csdevkit"        # C# Dev Kit (for .NET Aspire orchestration)
 )
 
 Write-Host "==============================================" -ForegroundColor Cyan
