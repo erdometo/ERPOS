@@ -1991,8 +1991,11 @@ async def get_graph(user: dict = Depends(get_authenticated_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-if __name__ == "__main__":
+def start():
     import uvicorn
     import os
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
+if __name__ == "__main__":
+    start()
