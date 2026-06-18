@@ -171,16 +171,28 @@ class ShieldGateway:
                     )
                     
                 vectors_res = conn.execute(text("SELECT node_id, source_type, text_content, embedding, clearance_level FROM vector_partitions;")).fetchall()
+                records = []
                 for row in vectors_res:
                     node_id, source_type, text_content, embedding_json, clearance = row
                     vector = json.loads(embedding_json)
-                    self.vector_adapter.upsert_vector(
-                        node_id=node_id,
-                        source_type=source_type,
-                        text_content=text_content,
-                        vector=vector,
-                        clearance_level=clearance
-                    )
+                    records.append({
+                        "node_id": node_id,
+                        "source_type": source_type,
+                        "text_content": text_content,
+                        "vector": vector,
+                        "clearance_level": clearance
+                    })
+                if hasattr(self.vector_adapter, "upsert_vectors_batch"):
+                    self.vector_adapter.upsert_vectors_batch(records)
+                else:
+                    for r in records:
+                        self.vector_adapter.upsert_vector(
+                            node_id=r["node_id"],
+                            source_type=r["source_type"],
+                            text_content=r["text_content"],
+                            vector=r["vector"],
+                            clearance_level=r["clearance_level"]
+                        )
                 print("Synchronization completed successfully.")
 
     def clear_graph_and_vector_stores(self):

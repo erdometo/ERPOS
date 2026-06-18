@@ -368,7 +368,7 @@ export default function App() {
 
   const [question, setQuestion] = useState("Show me today's anomalous transactions");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ui' | 'trace' | 'schema' | 'ledger' | 'data'>('ui');
+  const [activeTab, setActiveTab] = useState<'ui' | 'trace' | 'schema' | 'ledger' | 'data' | 'eval'>('ui');
   const [response, setResponse] = useState<QueryResponse | null>(null);
   const [schema, setSchema] = useState<string>('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -383,6 +383,222 @@ export default function App() {
   } | null>(null);
   const [selectedGraphNode, setSelectedGraphNode] = useState<any>(null);
   const [isVerifyingLedger, setIsVerifyingLedger] = useState(false);
+
+  // Evaluation Framework States
+  const [evalRuns, setEvalRuns] = useState<any[]>([]);
+  const [selectedRunId, setSelectedRunId] = useState<number | null>(null);
+  const [selectedRunDetails, setSelectedRunDetails] = useState<any>(null);
+  const [selectedScenarioResult, setSelectedScenarioResult] = useState<any>(null);
+  const [isTriggeringEval, setIsTriggeringEval] = useState(false);
+  const [evalSubTab, setEvalSubTab] = useState<'scenarios' | 'nodes' | 'vectors'>('scenarios');
+  
+  // Knowledge edit states
+  const [evalNodes, setEvalNodes] = useState<any[]>([]);
+  const [selectedNodeToEdit, setSelectedNodeToEdit] = useState<any>(null);
+  const [evalVectors, setEvalVectors] = useState<any[]>([]);
+  const [selectedVectorToEdit, setSelectedVectorToEdit] = useState<any>({
+    node_id: 1,
+    source_type: 'policy',
+    text_content: '',
+    clearance_level: 1
+  });
+  const [isSavingNode, setIsSavingNode] = useState(false);
+  const [isSavingVector, setIsSavingVector] = useState(false);
+  
+  // Human judge form states
+  const [humanJudgeScore, setHumanJudgeScore] = useState<number>(5);
+  const [humanJudgePass, setHumanJudgePass] = useState<number>(1);
+  const [humanJudgeFeedback, setHumanJudgeFeedback] = useState<string>('');
+  const [isSavingHumanJudge, setIsSavingHumanJudge] = useState(false);
+
+  // API fetching functions for Evaluation Dashboard
+  const fetchEvalRuns = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/eval/runs', {
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvalRuns(data);
+        if (data.length > 0 && selectedRunId === null) {
+          setSelectedRunId(data[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching eval runs:', err);
+    }
+  };
+
+  const fetchEvalRunDetails = async (runId: number) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/eval/runs/${runId}`, {
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedRunDetails(data);
+        if (selectedScenarioResult) {
+          const updated = data.results.find((r: any) => r.id === selectedScenarioResult.id);
+          if (updated) {
+            setSelectedScenarioResult(updated);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching eval run details:', err);
+    }
+  };
+
+  const triggerEvaluation = async () => {
+    setIsTriggeringEval(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/eval/run', {
+        method: 'POST',
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotification({ message: 'Evaluation run triggered.', type: 'success' });
+        setSelectedRunId(data.run_id);
+        await fetchEvalRuns();
+      } else {
+        const err = await res.json();
+        setNotification({ message: `Failed: ${err.detail || 'unknown error'}`, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+    } finally {
+      setIsTriggeringEval(false);
+    }
+  };
+
+  const submitHumanJudge = async (resultId: number) => {
+    setIsSavingHumanJudge(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/eval/scenario-results/${resultId}/human-judge`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({
+          human_pass: humanJudgePass,
+          human_score: humanJudgeScore,
+          human_feedback: humanJudgeFeedback
+        })
+      });
+      if (res.ok) {
+        setNotification({ message: 'Human judge feedback saved.', type: 'success' });
+        if (selectedRunId) {
+          await fetchEvalRunDetails(selectedRunId);
+        }
+      } else {
+        const err = await res.json();
+        setNotification({ message: `Failed: ${err.detail || 'unknown error'}`, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+    } finally {
+      setIsSavingHumanJudge(false);
+    }
+  };
+
+  const fetchEvalNodes = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/eval/nodes', {
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvalNodes(data);
+        if (data.length > 0 && !selectedNodeToEdit) {
+          setSelectedNodeToEdit(data[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching nodes:', err);
+    }
+  };
+
+  const saveEvalNode = async (nodeId: number, nodeData: any) => {
+    setIsSavingNode(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/eval/nodes/${nodeId}`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify(nodeData)
+      });
+      if (res.ok) {
+        setNotification({ message: 'Graph node evolved and Neo4j synced successfully.', type: 'success' });
+        await fetchEvalNodes();
+        fetchGraph();
+      } else {
+        const err = await res.json();
+        setNotification({ message: `Failed: ${err.detail || 'unknown error'}`, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+    } finally {
+      setIsSavingNode(false);
+    }
+  };
+
+  const fetchEvalVectors = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/eval/vectors', {
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvalVectors(data);
+      }
+    } catch (err) {
+      console.error('Error fetching vectors:', err);
+    }
+  };
+
+  const upsertEvalVector = async (vectorData: any) => {
+    setIsSavingVector(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/eval/vectors/upsert', {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify(vectorData)
+      });
+      if (res.ok) {
+        setNotification({ message: 'Vector partition updated and Qdrant synced.', type: 'success' });
+        await fetchEvalVectors();
+        setSelectedVectorToEdit({
+          node_id: 1,
+          source_type: 'policy',
+          text_content: '',
+          clearance_level: 1
+        });
+      } else {
+        const err = await res.json();
+        setNotification({ message: `Failed: ${err.detail || 'unknown error'}`, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+    } finally {
+      setIsSavingVector(false);
+    }
+  };
+
+  const deleteEvalVector = async (vectorId: number) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/eval/vectors/${vectorId}`, {
+        method: 'DELETE',
+        headers: getHeaders(false)
+      });
+      if (res.ok) {
+        setNotification({ message: 'Vector partition deleted and synced.', type: 'success' });
+        await fetchEvalVectors();
+      } else {
+        const err = await res.json();
+        setNotification({ message: `Failed: ${err.detail || 'unknown error'}`, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+    }
+  };
 
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
@@ -406,6 +622,37 @@ export default function App() {
     setUser(null);
     setResponse(null);
   };
+
+  // Evaluation hooks
+  useEffect(() => {
+    if (activeTab === 'eval') {
+      fetchEvalRuns();
+      if (evalSubTab === 'nodes') {
+        fetchEvalNodes();
+      } else if (evalSubTab === 'vectors') {
+        fetchEvalVectors();
+        fetchEvalNodes();
+      }
+    }
+  }, [activeTab, evalSubTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'eval' || !selectedRunId) return;
+    
+    fetchEvalRunDetails(selectedRunId);
+    
+    let intervalId: any = null;
+    if (selectedRunDetails && selectedRunDetails.run.status === 'running') {
+      intervalId = setInterval(() => {
+        fetchEvalRunDetails(selectedRunId);
+      }, 2000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [selectedRunId, activeTab, selectedRunDetails?.run?.status]);
+
 
   // Cycle through progress messages while task is pending
   useEffect(() => {
@@ -915,6 +1162,7 @@ export default function App() {
                   { id: 'ledger', label: 'Ledger Audit', icon: Shield },
                   { id: 'schema', label: 'Schema Explorer', icon: Layers },
                   { id: 'data', label: 'Raw Payload', icon: Database },
+                  ...(user && user.role !== 'customer' ? [{ id: 'eval', label: 'Evaluation Center', icon: Cpu }] : [])
                 ].map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -1372,6 +1620,591 @@ export default function App() {
                           <span className="text-slate-500 italic">No output data retrieved yet.</span>
                         )}
                       </pre>
+                    </div>
+                  )}
+
+                  {/* TAB 5: EVALUATION CENTER */}
+                  {activeTab === 'eval' && (
+                    <div className="space-y-6 animate-fadeIn">
+                      {/* Sub-tab Navigation */}
+                      <div className="flex gap-4 border-b border-slate-900 pb-3">
+                        {[
+                          { id: 'scenarios', label: 'Evaluation Scenarios', icon: Shield },
+                          { id: 'nodes', label: 'Optimize Graph Knowledge', icon: Network },
+                          { id: 'vectors', label: 'Optimize Vector Context', icon: Database },
+                        ].map((subTab) => {
+                          const Icon = subTab.icon;
+                          return (
+                            <button
+                              key={subTab.id}
+                              onClick={() => setEvalSubTab(subTab.id as any)}
+                              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                                evalSubTab === subTab.id
+                                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                                  : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              <Icon className="w-3.5 h-3.5" />
+                              {subTab.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* SUBTAB 1: SCENARIOS */}
+                      {evalSubTab === 'scenarios' && (
+                        <div className="space-y-6">
+                          {/* Controls Row */}
+                          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-950/60 p-4 rounded-xl border border-slate-900">
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                              <span className="text-xs text-slate-400 font-semibold">Select Run:</span>
+                              <select
+                                value={selectedRunId || ''}
+                                onChange={(e) => setSelectedRunId(Number(e.target.value))}
+                                className="bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-rose-500/50"
+                              >
+                                <option value="">-- No Runs Available --</option>
+                                {evalRuns.map((r) => (
+                                  <option key={r.id} value={r.id}>
+                                    Run #{r.id} ({new Date(r.created_at).toLocaleTimeString()}) - {r.status.toUpperCase()}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            
+                            <button
+                              onClick={triggerEvaluation}
+                              disabled={isTriggeringEval || (selectedRunDetails?.run?.status === 'running')}
+                              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-lg hover:shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                            >
+                              <RefreshCw className={`w-3.5 h-3.5 ${isTriggeringEval || (selectedRunDetails?.run?.status === 'running') ? 'animate-spin' : ''}`} />
+                              {isTriggeringEval || (selectedRunDetails?.run?.status === 'running') ? 'Running Evaluation Suite...' : 'Trigger Evaluation Run'}
+                            </button>
+                          </div>
+
+                          {/* Stats Grid */}
+                          {selectedRunDetails && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {[
+                                {
+                                  label: 'Evaluation Status',
+                                  value: selectedRunDetails.run.status.toUpperCase(),
+                                  color: selectedRunDetails.run.status === 'completed' ? 'text-emerald-400' : selectedRunDetails.run.status === 'failed' ? 'text-rose-400' : 'text-amber-400 animate-pulse'
+                                },
+                                {
+                                  label: 'Pass Rate (Heuristic)',
+                                  value: selectedRunDetails.run.total_count > 0 
+                                    ? `${Math.round((selectedRunDetails.run.pass_count / selectedRunDetails.run.total_count) * 100)}%`
+                                    : '0%',
+                                  color: 'text-rose-400'
+                                },
+                                {
+                                  label: 'Total Scenarios',
+                                  value: selectedRunDetails.run.total_count,
+                                  color: 'text-slate-200'
+                                },
+                                {
+                                  label: 'Completed / Failed',
+                                  value: `${selectedRunDetails.run.pass_count} / ${selectedRunDetails.run.fail_count}`,
+                                  color: 'text-slate-400'
+                                }
+                              ].map((stat, idx) => (
+                                <div key={idx} className="bg-slate-950/40 border border-slate-900/60 p-4 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{stat.label}</span>
+                                  <span className={`text-sm font-extrabold font-mono ${stat.color}`}>{stat.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Scenarios Table */}
+                          {selectedRunDetails ? (
+                            <div className="bg-slate-950/40 border border-slate-900 rounded-xl overflow-hidden">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-900/40 text-slate-500 border-b border-slate-900 font-bold">
+                                      <th className="p-3">Scenario</th>
+                                      <th className="p-3">Category</th>
+                                      <th className="p-3">User context</th>
+                                      <th className="p-3">Heuristic</th>
+                                      <th className="p-3">LLM Judge</th>
+                                      <th className="p-3">Human Judge</th>
+                                      <th className="p-3 text-right">Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedRunDetails.results.map((res: any) => {
+                                      // Agreement discrepancy highlighter
+                                      const hasDiscrepancy = res.status === 'completed' && res.predefined_pass !== res.llm_pass;
+                                      
+                                      return (
+                                        <tr key={res.id} className={`border-b border-slate-900 last:border-0 hover:bg-slate-900/30 transition-all ${hasDiscrepancy ? 'bg-amber-500/5' : ''}`}>
+                                          <td className="p-3 font-semibold text-slate-300">
+                                            <div className="flex flex-col">
+                                              <span>{res.name}</span>
+                                              <span className="text-[10px] text-slate-500 font-mono mt-0.5">{res.query.substring(0, 45)}...</span>
+                                            </div>
+                                          </td>
+                                          <td className="p-3 text-slate-400 font-mono text-[10px]">{res.category}</td>
+                                          <td className="p-3 text-slate-400">
+                                            <span className="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-rose-400 font-bold uppercase tracking-wider">{res.role}</span>
+                                          </td>
+                                          <td className="p-3">
+                                            {res.status !== 'completed' ? (
+                                              <span className="text-slate-500 animate-pulse">Running...</span>
+                                            ) : res.predefined_pass === 1 ? (
+                                              <span className="text-emerald-400 font-bold">PASS</span>
+                                            ) : (
+                                              <span className="text-rose-400 font-bold">FAIL</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3">
+                                            {res.status !== 'completed' ? (
+                                              <span className="text-slate-500 animate-pulse">-</span>
+                                            ) : res.llm_pass === 1 ? (
+                                              <span className="text-emerald-400 font-bold">PASS</span>
+                                            ) : (
+                                              <span className="text-rose-400 font-bold">FAIL</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3">
+                                            {res.human_pass === 1 ? (
+                                              <span className="text-emerald-400 font-bold">PASS ({res.human_score}/5)</span>
+                                            ) : res.human_pass === 0 ? (
+                                              <span className="text-rose-400 font-bold">FAIL ({res.human_score}/5)</span>
+                                            ) : (
+                                              <span className="text-slate-500 italic">Unrated</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-right">
+                                            <button
+                                              onClick={() => {
+                                                setSelectedScenarioResult(res);
+                                                setHumanJudgeScore(res.human_score || 5);
+                                                setHumanJudgePass(res.human_pass === null ? 1 : res.human_pass);
+                                                setHumanJudgeFeedback(res.human_feedback || '');
+                                              }}
+                                              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 hover:text-rose-300 rounded-md font-semibold transition-all active:scale-95"
+                                            >
+                                              Inspect & Judge
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="py-20 text-center text-slate-500 text-xs italic">
+                              No evaluation run selected. Trigger a run or select one above.
+                            </div>
+                          )}
+
+                          {/* Scenario Detail Inspector */}
+                          {selectedScenarioResult && (
+                            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 space-y-6 animate-slideUp">
+                              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                                <div>
+                                  <h3 className="text-sm font-bold text-slate-200">{selectedScenarioResult.name}</h3>
+                                  <p className="text-xs text-slate-400">Task details, execution trajectory, and judge scoring.</p>
+                                </div>
+                                <button
+                                  onClick={() => setSelectedScenarioResult(null)}
+                                  className="text-xs text-slate-500 hover:text-slate-300 font-semibold"
+                                >
+                                  Close Inspector
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Details column */}
+                                <div className="space-y-4">
+                                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-2">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Target Query & Context</span>
+                                    <p className="text-xs text-slate-300 font-medium font-mono">"{selectedScenarioResult.query}"</p>
+                                    <div className="flex gap-2 text-[10px] mt-1">
+                                      <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-rose-400 font-bold uppercase">{selectedScenarioResult.role}</span>
+                                      <span className="text-slate-500">{selectedScenarioResult.email}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-2">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Predefined Assertions</span>
+                                    <div className="text-xs text-slate-300 space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedScenarioResult.actual_status === selectedScenarioResult.expected_status ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                                        <span>Expected Status: <b className="font-mono text-[10px] uppercase bg-slate-900 px-1 rounded">{selectedScenarioResult.expected_status}</b> (Actual: <b className="font-mono text-[10px] uppercase bg-slate-900 px-1">{selectedScenarioResult.actual_status}</b>)</span>
+                                      </div>
+                                      <div className="flex flex-col gap-1 mt-1 pl-3.5">
+                                        <span className="text-[10px] text-slate-500 font-bold">Expected Keywords:</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {selectedScenarioResult.expected_contains.map((kw: string, idx: number) => {
+                                            // Check matches in response output or trace
+                                            const match = selectedScenarioResult.trace.some((t: any) => t.details.toLowerCase().includes(kw.toLowerCase())) || 
+                                                          JSON.stringify(selectedScenarioResult.data_payload).toLowerCase().includes(kw.toLowerCase()) || 
+                                                          (selectedScenarioResult.ui_code && selectedScenarioResult.ui_code.toLowerCase().includes(kw.toLowerCase()));
+                                            return (
+                                              <span key={idx} className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                                match ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                              }`}>
+                                                {kw} {match ? '✓' : '✗'}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-2">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">LLM Judge Verdict</span>
+                                    <div className="text-xs text-slate-300 space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedScenarioResult.llm_pass === 1 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                                        <span>Status: <b className={`font-bold ${selectedScenarioResult.llm_pass === 1 ? 'text-emerald-400' : 'text-rose-400'}`}>{selectedScenarioResult.llm_pass === 1 ? 'PASS' : 'FAIL'}</b> (Score: {selectedScenarioResult.llm_score || 'N/A'}/5)</span>
+                                      </div>
+                                      <pre className="text-[11px] text-slate-400 whitespace-pre-wrap bg-black/40 border border-slate-900 p-3 rounded-lg leading-normal font-sans max-h-[160px] overflow-y-auto">
+                                        {selectedScenarioResult.llm_feedback || 'No LLM feedback generated.'}
+                                      </pre>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Human judge & Trace column */}
+                                <div className="space-y-4">
+                                  {/* Human Judge Form */}
+                                  <div className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-xl space-y-4 shadow-lg backdrop-blur-sm">
+                                    <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest font-mono block">Human-as-the-Judge Verification</span>
+                                    
+                                    <div className="flex gap-4">
+                                      <div className="flex-1 space-y-1">
+                                        <label className="text-[10px] text-slate-400 font-bold">PASSED VERDICT</label>
+                                        <div className="flex gap-2">
+                                          {[
+                                            { val: 1, label: 'PASS', color: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 ring-emerald-500/30' },
+                                            { val: 0, label: 'FAIL', color: 'bg-rose-500/20 border-rose-500/30 text-rose-400 ring-rose-500/30' }
+                                          ].map((opt) => (
+                                            <button
+                                              key={opt.val}
+                                              type="button"
+                                              onClick={() => setHumanJudgePass(opt.val)}
+                                              className={`flex-1 py-1.5 rounded-md text-xs font-semibold border transition-all ${
+                                                humanJudgePass === opt.val
+                                                  ? opt.color + ' ring-2 ring-offset-2 ring-offset-slate-950 font-bold'
+                                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300'
+                                              }`}
+                                            >
+                                              {opt.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="w-32 space-y-1">
+                                        <label className="text-[10px] text-slate-400 font-bold">SCORE (1-5)</label>
+                                        <select
+                                          value={humanJudgeScore}
+                                          onChange={(e) => setHumanJudgeScore(Number(e.target.value))}
+                                          className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-rose-500/50"
+                                        >
+                                          {[5, 4, 3, 2, 1].map((s) => (
+                                            <option key={s} value={s}>{s} Stars</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] text-slate-400 font-bold">AUDITOR COMMENTS & FEEDBACK</label>
+                                      <textarea
+                                        value={humanJudgeFeedback}
+                                        onChange={(e) => setHumanJudgeFeedback(e.target.value)}
+                                        placeholder="Add comment, identify loop errors, or justify human score..."
+                                        className="w-full min-h-[80px] bg-slate-950 border border-slate-805/50 rounded-lg p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 transition-all resize-none leading-relaxed"
+                                      />
+                                    </div>
+
+                                    <button
+                                      onClick={() => submitHumanJudge(selectedScenarioResult.id)}
+                                      disabled={isSavingHumanJudge}
+                                      className="w-full py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-lg hover:shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center"
+                                    >
+                                      {isSavingHumanJudge ? 'Saving Judgment...' : 'Save Human Judgment'}
+                                    </button>
+                                  </div>
+
+                                  {/* Trace view */}
+                                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Execution Agent Logs</span>
+                                    <div className="space-y-2 max-h-[160px] overflow-y-auto font-mono text-[10px] pr-2">
+                                      {selectedScenarioResult.trace && selectedScenarioResult.trace.length > 0 ? (
+                                        selectedScenarioResult.trace.map((t: any, idx: number) => (
+                                          <div key={idx} className="border-b border-slate-900/50 pb-2 last:border-0 last:pb-0">
+                                            <span className="text-rose-400 font-bold">[{t.agent}]</span> <span className="text-slate-500">{t.action}</span>
+                                            <p className="text-slate-300 mt-0.5 pl-1.5 border-l border-slate-800">{t.details}</p>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <div className="text-center text-slate-500 italic py-6">No execution traces logged.</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* SUBTAB 2: EDIT GRAPH KNOWLEDGE */}
+                      {evalSubTab === 'nodes' && (
+                        <div className="space-y-6">
+                          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-900 flex flex-col md:flex-row gap-4 items-center justify-between">
+                            <div>
+                              <h3 className="text-xs font-bold text-slate-200">Evolve Neo4j Graph Knowledge Nodes</h3>
+                              <p className="text-[10px] text-slate-400">Directly modify agent skills (`skill.md` directives) and watch the agent's performance adapt in subsequent runs.</p>
+                            </div>
+                            
+                            <button
+                              onClick={fetchEvalNodes}
+                              className="px-3 py-1.5 bg-slate-900 border border-slate-800 text-xs font-semibold rounded-lg hover:bg-slate-800 transition-all text-slate-300"
+                            >
+                              Refresh Nodes
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {/* Left: Nodes list */}
+                            <div className="lg:col-span-4 bg-slate-950 border border-slate-900 rounded-xl overflow-hidden h-[400px] overflow-y-auto">
+                              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block p-3 bg-slate-900/40 border-b border-slate-900">Select Graph Node</span>
+                              <div className="divide-y divide-slate-900">
+                                {evalNodes.map((n) => (
+                                  <button
+                                    key={n.id}
+                                    onClick={() => setSelectedNodeToEdit(n)}
+                                    className={`w-full text-left p-3 text-xs transition-all flex flex-col gap-1 ${
+                                      selectedNodeToEdit?.id === n.id ? 'bg-indigo-500/10 border-l-2 border-indigo-500 font-semibold' : 'hover:bg-slate-900/30 text-slate-400'
+                                    }`}
+                                  >
+                                    <span className="font-bold text-slate-200">{n.name}</span>
+                                    <span className="text-[9px] text-slate-500 uppercase font-mono tracking-wider">{n.label} (Clearance: {n.clearance_level})</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Right: Edit form */}
+                            {selectedNodeToEdit ? (
+                              <div className="lg:col-span-8 bg-slate-900/20 border border-slate-900 p-5 rounded-xl space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+                                  <span className="text-xs font-bold text-indigo-400">Editing Node #{selectedNodeToEdit.id}: {selectedNodeToEdit.name}</span>
+                                  <span className="text-[10px] text-slate-500 font-mono">Mapped dynamically to Neo4j Graph DB</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 font-bold">NODE NAME</label>
+                                    <input
+                                      type="text"
+                                      value={selectedNodeToEdit.name}
+                                      onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, name: e.target.value })}
+                                      className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-indigo-500/50"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 font-bold">NODE LABEL</label>
+                                    <select
+                                      value={selectedNodeToEdit.label}
+                                      onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, label: e.target.value })}
+                                      className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-indigo-500/50"
+                                    >
+                                      <option value="workflow">Workflow</option>
+                                      <option value="regulation">Regulation</option>
+                                      <option value="agent">Agent</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 font-bold">CLEARANCE LEVEL</label>
+                                    <select
+                                      value={selectedNodeToEdit.clearance_level}
+                                      onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, clearance_level: Number(e.target.value) })}
+                                      className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-indigo-500/50"
+                                    >
+                                      <option value={1}>Clearance 1 (Customer/Public)</option>
+                                      <option value={2}>Clearance 2 (Employee/Internal)</option>
+                                      <option value={3}>Clearance 3 (Admin/Restricted)</option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 font-bold">METADATA PROPERTIES (JSON)</label>
+                                    <input
+                                      type="text"
+                                      value={selectedNodeToEdit.properties}
+                                      onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, properties: e.target.value })}
+                                      className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-indigo-500/50 font-mono text-[11px]"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-slate-400 font-bold">NODE DESCRIPTION</label>
+                                  <input
+                                    type="text"
+                                    value={selectedNodeToEdit.description || ''}
+                                    onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, description: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-indigo-500/50"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-slate-400 font-bold">SKILL DIRECTIVE MARKDOWN (`skill.md` contents)</label>
+                                  <textarea
+                                    value={selectedNodeToEdit.skill_markdown || ''}
+                                    onChange={(e) => setSelectedNodeToEdit({ ...selectedNodeToEdit, skill_markdown: e.target.value })}
+                                    className="w-full min-h-[180px] bg-slate-950 border border-slate-805/50 rounded-lg p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all resize-none leading-relaxed font-mono"
+                                  />
+                                </div>
+
+                                <button
+                                  onClick={() => saveEvalNode(selectedNodeToEdit.id, selectedNodeToEdit)}
+                                  disabled={isSavingNode}
+                                  className="w-full py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-lg hover:shadow-indigo-500/25 active:scale-95 transition-all flex items-center justify-center"
+                                >
+                                  {isSavingNode ? 'Evolving Graph Node...' : 'Commit Node Evolution to Neo4j'}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="lg:col-span-8 py-20 text-center text-slate-500 text-xs italic">
+                                Select a node from the list to edit.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 3: EDIT VECTOR CONTEXT */}
+                      {evalSubTab === 'vectors' && (
+                        <div className="space-y-6">
+                          {/* Top: Vector manager form */}
+                          <div className="bg-slate-900/20 border border-slate-900 p-5 rounded-xl space-y-4">
+                            <span className="text-xs font-bold text-teal-400 block border-b border-slate-900 pb-3">Upsert Context Document (Qdrant Vector database)</span>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-slate-400 font-bold">GOVERNING GRAPH NODE ID</label>
+                                <select
+                                  value={selectedVectorToEdit.node_id}
+                                  onChange={(e) => setSelectedVectorToEdit({ ...selectedVectorToEdit, node_id: Number(e.target.value) })}
+                                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-teal-500/50"
+                                >
+                                  {evalNodes.map((n) => (
+                                    <option key={n.id} value={n.id}>Node #{n.id}: {n.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-slate-400 font-bold">SOURCE TYPE</label>
+                                <select
+                                  value={selectedVectorToEdit.source_type}
+                                  onChange={(e) => setSelectedVectorToEdit({ ...selectedVectorToEdit, source_type: e.target.value })}
+                                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-teal-500/50"
+                                >
+                                  <option value="policy">policy</option>
+                                  <option value="law">law</option>
+                                  <option value="email">email</option>
+                                  <option value="internal_doc">internal_doc</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-slate-400 font-bold">SECURITY CLEARANCE</label>
+                                <select
+                                  value={selectedVectorToEdit.clearance_level}
+                                  onChange={(e) => setSelectedVectorToEdit({ ...selectedVectorToEdit, clearance_level: Number(e.target.value) })}
+                                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-md py-1.5 px-3 focus:outline-none focus:border-teal-500/50"
+                                >
+                                  <option value={1}>Clearance 1 (Customer/Public)</option>
+                                  <option value={2}>Clearance 2 (Employee/Internal)</option>
+                                  <option value={3}>Clearance 3 (Admin/Restricted)</option>
+                                </select>
+                              </div>
+
+                              <div className="flex items-end">
+                                <button
+                                  onClick={() => upsertEvalVector(selectedVectorToEdit)}
+                                  disabled={isSavingVector || !selectedVectorToEdit.text_content}
+                                  className="w-full py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-lg hover:shadow-teal-500/25 active:scale-95 transition-all flex items-center justify-center"
+                                >
+                                  {isSavingVector ? 'Upserting Vector...' : 'Upsert Vector & Sync Qdrant'}
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] text-slate-400 font-bold">DOCUMENT TEXT CONTENT (Vectorized via Google Embeddings)</label>
+                              <textarea
+                                value={selectedVectorToEdit.text_content}
+                                onChange={(e) => setSelectedVectorToEdit({ ...selectedVectorToEdit, text_content: e.target.value })}
+                                placeholder="Enter unstructured rule context, CEO policy directive, or regulatory details..."
+                                className="w-full min-h-[80px] bg-slate-950 border border-slate-805/50 rounded-lg p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all resize-none leading-relaxed"
+                              />
+                            </div>
+                          </div>
+
+                          {/* List of current vectors */}
+                          <div className="bg-slate-950/40 border border-slate-900 rounded-xl overflow-hidden">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block p-3 bg-slate-900/40 border-b border-slate-900">Current Vector Partition Documents</span>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <thead>
+                                  <tr className="bg-slate-900/20 text-slate-500 border-b border-slate-900 font-bold">
+                                    <th className="p-3">ID</th>
+                                    <th className="p-3">Source Type</th>
+                                    <th className="p-3">Governs Node ID</th>
+                                    <th className="p-3">Clearance</th>
+                                    <th className="p-3">Text Content</th>
+                                    <th className="p-3 text-right">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {evalVectors.map((v) => (
+                                    <tr key={v.id} className="border-b border-slate-900 last:border-0 hover:bg-slate-900/20 transition-all">
+                                      <td className="p-3 font-semibold text-slate-400 font-mono">{v.id}</td>
+                                      <td className="p-3 text-slate-300">
+                                        <span className="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-teal-400 font-bold uppercase font-mono">{v.source_type}</span>
+                                      </td>
+                                      <td className="p-3 font-semibold text-slate-300">Node #{v.node_id}</td>
+                                      <td className="p-3 text-slate-400 font-mono">Level {v.clearance_level}</td>
+                                      <td className="p-3 text-slate-400 max-w-sm truncate">"{v.text_content}"</td>
+                                      <td className="p-3 text-right">
+                                        <button
+                                          onClick={() => setSelectedVectorToEdit(v)}
+                                          className="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold"
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => deleteEvalVector(v.id)}
+                                          className="text-[11px] text-rose-500 hover:text-rose-400 font-semibold ml-2"
+                                        >
+                                          Delete
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

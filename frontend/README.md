@@ -28,6 +28,15 @@ The terminal is designed with sleek glassmorphic aesthetics, neon indicators, an
 ### 4. Interactive Suggestion Chips
 Includes shortcuts to trigger compliance audits, evolutionary schema creations, infinite loop tests (verifying FinOps breakers), and direct cryptographic ledger verifications.
 
+### 5. Evaluation Center & Knowledge Optimizer
+A dedicated workspace tab providing full transparency into model test suites and system optimization:
+*   **Performance Metrics Grid**: Displays live stats including overall scenario Pass Rates, Total Runs executed, count of active testing Scenarios, and asynchronous Worker queue health.
+*   **Asynchronous Scenario Panel**: Lists the 10 core capability tests with color-coded status badges (`pending`, `running`, `completed`, `failed`).
+*   **Step-by-Step Scenario Detail Inspector**: Highlights the expected vs. actual outputs, the full ReAct agent execution trace steps, and the generated ephemeral React JSX UI.
+*   **LLM vs Heuristic Comparison**: Visualizes the LLM-as-a-judge score (1-5 stars) and detailed CoT feedback side-by-side with deterministic heuristic keyword passes, alerting auditors on verdict discrepancies.
+*   **Human Auditing Form**: Enables manual reviews with star ratings (1-5 stars), pass overrides, and feedback notes, committing results directly to the database.
+*   **Interactive Knowledge Optimizer**: Provides code editing textareas for Neo4j workflow skill nodes (`skill_markdown`) and a CRUD data table for Qdrant vector partitions (upserting and deleting localized policies directly).
+
 ```mermaid
 graph TD
     Code["Agent JSX Code Payload"]

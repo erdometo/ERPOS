@@ -153,7 +153,7 @@ To run the orchestrated microservices stack binding standalone database instance
 
 ## 🧪 Integration & Safety Verification
 
-We provide two test suites to verify system security, cryptographic chains, saga compensation transactions, and role clearances:
+We provide three test suites to verify system security, cryptographic chains, saga compensation transactions, role clearances, and our evaluation poller:
 
 ### 1. Primary Integration Tests (`test_api.py`)
 To verify the complete safety sandbox, cryptographic ledger pipeline, and asynchronous task execution:
@@ -179,3 +179,16 @@ python test_saga_rbac.py
 This suite validates:
 *   **Dynamic Clearance Control**: Charlie (Customer, clearance 1), Bob (Employee, clearance 2), and Alice (Admin, clearance 3) see only the product records matching their clearance level.
 *   **Distributed Saga (Procure-to-Pay)**: Deducts stock -> processes payment -> writes purchase invoice. Failures (e.g. buying limits > $500) trigger automatic compensating rollbacks that restore stock and void transactions.
+
+### 3. Evaluation & Optimization Framework Tests (`test_eval_api.py`)
+To verify the asynchronous evaluation engine, human reviews, and direct knowledge optimization loops:
+```bash
+cd backend
+# With virtual env active:
+python test_eval_api.py
+```
+This suite validates:
+*   **Asynchronous Scenario Execution**: Enqueuing and polling 10 gold-standard scenarios (Saga rollbacks, DDL blocks, semantic query constraints).
+*   **Human-as-a-Judge API**: Rating scenario results, toggling status, and saving auditors feedback.
+*   **Knowledge Base Mutation**: Direct edits to Neo4j graph nodes and Qdrant vector partitions, verifying synchronizations to SQLite.
+

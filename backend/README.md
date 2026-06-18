@@ -30,6 +30,11 @@ Decouples request ingestion from task execution:
 *   `POST /api/action/execute`: Executes parameter-mapped SQL updates governed by graph nodes.
 *   `GET /api/ledger`: Performs cryptographic verification and returns the audit trail.
 *   `GET /api/schema`: Introspects SQL, Graph nodes, and Vector counts to build a dynamic schema overview.
+*   `POST /api/eval/run`: Concurrently triggers 10 scenarios evaluating transaction limits, DDL mutations, RBAC clearances, and circuit breakers, polling outputs via a background poller.
+*   `GET /api/eval/runs` & `GET /api/eval/runs/{run_id}`: Fetches metrics and detailed CoT LLM-as-a-judge verdicts for past evaluation runs.
+*   `POST /api/eval/scenario-results/{result_id}/human-judge`: Submits human star ratings and review audits to database.
+*   `GET /api/eval/nodes` & `POST /api/eval/nodes/{node_id}`: Optimizes Neo4j workflow skill nodes directly from the UI.
+*   `GET /api/eval/vectors` & `POST /api/eval/vectors/upsert` & `DELETE /api/eval/vectors/{vector_id}`: Creates and deletes vector chunks to dynamically direct agent retrieval bounds.
 
 ---
 
@@ -111,4 +116,16 @@ This script performs the following validation steps:
 *   **Dynamic Clearance Control**: Verifies that users see only data matching their level. Customer (Charlie, level 1) sees only public furniture; Employee (Bob, level 2) sees internal chipsets but no admin software; Admin (Alice, level 3) can access all products.
 *   **Distributed Saga (Procure-to-Pay)**: Tests compliant purchases (below $500 spending limit) which auto-deduct stock and complete.
 *   **Compensating Rollback Execution**: Tests non-compliant purchases (above $500 limit) which trigger a simulated payment denial, executing backward compensation logic that restores reserved inventory stock and voids the transaction.
+
+### 3. Evaluation & Optimization Framework Tests (`test_eval_api.py`)
+Verify the custom evaluation poller, human review auditing, and database optimization workflows by running:
+```bash
+python test_eval_api.py
+```
+This script performs the following validation steps:
+*   **Asynchronous Evaluations Run**: Fires a run of 10 gold-standard scenarios concurrently, polling database outcomes.
+*   **Human Feedback Persistence**: Saves a custom rating, verification status, and text feedback to a scenario result, re-fetching to assert correct storage.
+*   **Knowledge Graph Optimizer**: Modifies standard Cypher workflow node data (`skill_markdown`) and asserts changes synchronize immediately across Neo4j and SQLite.
+*   **Vector Partition Optimizer**: Upserts a compliance memo document to the database, verifies collection generation/embedding mapping in Qdrant, lists partitions, and deletes it to clean database state.
+
 

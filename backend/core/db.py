@@ -107,6 +107,37 @@ class Task(Base):
     result_json = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     finished_at = Column(DateTime, nullable=True)
+class EvaluationRun(Base):
+    __tablename__ = 'evaluation_runs'
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String(20), default="running")  # running, completed, failed
+    pass_count = Column(Integer, default=0)
+    fail_count = Column(Integer, default=0)
+    total_count = Column(Integer, default=0)
+
+class EvaluationScenarioResult(Base):
+    __tablename__ = 'evaluation_scenario_results'
+    id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, ForeignKey('evaluation_runs.id', ondelete="CASCADE"), nullable=False)
+    scenario_id = Column(String(50), nullable=False)
+    name = Column(String(100), nullable=False)
+    category = Column(String(50), nullable=False)
+    query = Column(Text, nullable=False)
+    role = Column(String(20), nullable=False)
+    email = Column(String(100), nullable=False)
+    task_id = Column(String(36), nullable=False)
+    expected_status = Column(String(20), nullable=False)
+    expected_contains = Column(Text, nullable=False)  # JSON string of expected output keywords
+    predefined_pass = Column(Integer, default=0)  # 0: fail, 1: pass
+    llm_pass = Column(Integer, default=0)  # 0: fail, 1: pass
+    llm_score = Column(Integer, nullable=True)  # 1-5
+    llm_feedback = Column(Text, nullable=True)
+    human_pass = Column(Integer, nullable=True)  # 0: fail, 1: pass, None: unrated
+    human_score = Column(Integer, nullable=True)  # 1-5
+    human_feedback = Column(Text, nullable=True)
+    status = Column(String(20), default="pending")  # pending, running, completed, failed
+
 
 # ==================== DATABASE INITIALIZATION ====================
 
@@ -249,3 +280,7 @@ def verify_ledger_integrity() -> list:
     except Exception as e:
         print(f"Ledger verification error: {e}")
     return tampered_indices
+
+# Automatically create evaluation tables if not present
+Base.metadata.create_all(engine)
+

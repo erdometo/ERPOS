@@ -99,7 +99,7 @@ class ProcureToPaySaga:
 
     def _rollback(self):
         self.state["status"] = "compensating"
-        self.state["logs"].append("Saga transaction aborted. Launching backward compensating logic sequence:")
+        self.state["logs"].append("Saga transaction aborted. Launching backward compensating logic sequence (compensation):")
         
         # Compensate Invoice
         if self.state["invoice_generated"]:

@@ -113,6 +113,55 @@ class QdrantVectorAdapter:
         finally:
             client.close()
 
+    def upsert_vectors_batch(self, records: list):
+        if not records:
+            return
+        
+        by_dim = {}
+        for record in records:
+            node_id = record["node_id"]
+            source_type = record["source_type"]
+            text_content = record["text_content"]
+            vector = record["vector"]
+            clearance_level = record.get("clearance_level", 1)
+            
+            dim = len(vector)
+            if dim not in by_dim:
+                by_dim[dim] = []
+            by_dim[dim].append((node_id, source_type, text_content, vector, clearance_level))
+            
+        client = self._get_client()
+        try:
+            import uuid
+            for dim, items in by_dim.items():
+                self._ensure_collection(client, dim)
+                collection_name = f"erp_vectors_{dim}"
+                
+                points = []
+                for node_id, source_type, text_content, vector, clearance_level in items:
+                    point_id = str(uuid.uuid4())
+                    points.append(
+                        qdrant_models.PointStruct(
+                            id=point_id,
+                            vector=vector,
+                            payload={
+                                "node_id": int(node_id),
+                                "source_type": source_type.lower(),
+                                "text_content": text_content,
+                                "clearance_level": int(clearance_level)
+                            }
+                        )
+                    )
+                
+                chunk_size = 100
+                for i in range(0, len(points), chunk_size):
+                    client.upsert(
+                        collection_name=collection_name,
+                        points=points[i:i+chunk_size]
+                    )
+        finally:
+            client.close()
+
     def search_vectors(self, query_vector, limit=2, role: str = None) -> list:
         dim = len(query_vector)
         client = self._get_client()
