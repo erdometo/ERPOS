@@ -1,47 +1,66 @@
-# Project: OmniGate ERP OS Website Remake (SAG Showcase)
+# Project: OmniGate ERP OS Website Remake
 
 ## Architecture
-- **Tech Stack**: Vanilla HTML5, CSS3 (Modern Glassmorphism & Custom Properties), ES6+ JavaScript (Pure Client-Side State, Web Crypto API, SVG/Canvas Rendering).
-- **Runtime Model**: 100% Self-contained client-side single-page application (SPA). Zero external backend dependencies for showcase mode.
-- **Core Systems**:
-  1. `SAG Studio Engine`: Hardware-accelerated Bifurcated DAG Visualizer, multi-benchmark trajectory replay, transport controls, synchronized telemetry inspector.
-  2. `Multi-Benchmark Ingestion Hub`: Dynamic ingestion of 6 standard agent benchmark traces with live throughput telemetry.
-  3. `Zero-UI Sandbox & Ephemeral Generator`: 4 enterprise ERP workflow simulations, sub-15ms ReAct streaming, runtime compilation of approval widgets, diff tables, and SVG charts.
-  4. `Cryptographic Ledger & ZK Audit Suite`: Chained SHA-256 block ledger, cascading downstream invalidation on tamper, sequential cryptographic repair engine.
-  5. `Enterprise Architecture & Developer Hub`: Latency comparison matrix (Legacy 850ms/6 hops vs OmniGate 12ms/1 local hop) and copyable MCP integration cards for Claude Code, Cursor, and Google Antigravity.
-
-## Code Layout
-- `website/public/index.html`: Unified DOM structure with semantic sections, accessible ARIA roles, and verified test anchors (`#terminal-container`, `#ledger-container`, `#ephemeral-placeholder`, `#ephemeral-ui-container`).
-- `website/public/styles.css`: Dark obsidian theme (`#07090e`, `#0d121d`), radiant neon accents (Emerald, Electric Cyan, Indigo, Amber, Crimson), glassmorphic backdrops, glowing node keyframes, and responsive layouts (1024px, 768px, 480px).
-- `website/public/app.js`: Modular client-side architecture containing `SAGStudioState`, `BenchmarkRegistry`, `ReActEngine`, `EphemeralUIGenerator`, `CryptoLedgerEngine`, and `MCPCardController`.
-- `website/verify_suite.py`: Automated 4-tier verification test suite.
-- `website/verify_m1.py`: Structural & layout verification suite.
+The OmniGate ERP OS website is a high-performance, single-page enterprise showcase built with vanilla HTML5, CSS3 (modern glassmorphic obsidian theme with custom properties), and modular ES6 JavaScript (`app.js`).
+- **Frontend Stack**: Native ES Modules (`app.js`), Zero Build Step / Bundler overhead, Web Crypto API (`crypto.subtle.digest('SHA-256')`).
+- **Design System**: Dark Obsidian (`#08060e`, `#0d111d`), Radiant Neon Accents (Emerald `#10b981`, Electric Cyan `#06b6d4`, Indigo `#6366f1`, Amber `#f59e0b`, Crimson `#ef4444`). Fonts: Outfit, Inter, JetBrains Mono.
+- **Data Flow**:
+  - `SAGStudioEngine` manages the 5-step episodic timeline for bifurcated DAG visualization and telemetry stream.
+  - `SimulatorState` & `Workflows` manage the 4 operational ERP sandboxes, ReAct stream generation, and ephemeral card state.
+  - Cryptographic Block Ledger manages SHA-256 linked chain with Genesis block (64 zeros), tamper simulation on Block #2, cascading invalidation, and repair/recalculation.
+  - ROI Calculator dynamically updates labor savings and error recoup in real time based on slider inputs.
+- **Hosting & CI**: Firebase Hosting (`omnigate-erp-os`), GitHub repository `erdometo/ERPOS` on branch `main`.
 
 ## Feature Inventory
-| # | Feature | Description | Milestone | Source |
-|---|---------|-------------|-----------|--------|
-| 1 | F1.1 Bifurcated DAG Visualizer | Upper unguided lane (<35% Emerald, 35-65% Amber, >=65% Crimson), Divergence Point (t_safe), Lower Emerald lane (100% completion) | M2 | ORIGINAL_REQUEST §R1 |
-| 2 | F1.2 Transport Control Suite | Play, Pause, Step Next, Step Prev, Jump to t_safe, Reset, Timeline Scrubber, Speed presets (0.25x–10x) | M2 | ORIGINAL_REQUEST §R1 |
-| 3 | F1.3 Playback Mode Toggle | Progressive Bloom mode vs Pulse Highlight mode | M2 | ORIGINAL_REQUEST §R1 |
-| 4 | F1.4 Telemetry Inspector | Real-time risk gauge, subagent step roles, LLM thoughts, tool/bash actions, stdout observations, semantic entities | M2 | ORIGINAL_REQUEST §R1 |
-| 5 | F2.1 6-Benchmark Dataset Ingestion Hub | Switcher & pre-packaged trajectory traces: SWE-bench, InterCode, WebArena, ALFWorld, ToolBench, ATIF | M2 | ORIGINAL_REQUEST §R2 |
-| 6 | F2.2 Live Ingestion Throughput HUD | 2,514.5 events/sec, 23,610 episodic events, 15,318 test cases, 1,236 semantic entities | M2 | ORIGINAL_REQUEST §R2 |
-| 7 | F3.1 4 Interactive ERP Scenarios | Invoice Anomaly Detection, Inventory Stockout Mitigation, Autonomous SQL Querying, RBAC Security Quarantine | M3 | ORIGINAL_REQUEST §R3 |
-| 8 | F3.2 Simulated sub-15ms ReAct Stream | Sub-15ms agent loop latency streaming with subagent role badges & live token stream | M3 | ORIGINAL_REQUEST §R3 |
-| 9 | F3.3 Ephemeral UI Generator | On-the-fly interactive approval widgets, before/after diff tables, and dynamic SVG/Canvas charts | M3 | ORIGINAL_REQUEST §R3 |
-| 10 | F4.1 Chained SHA-256 Ledger Visualizer | Chained cryptographic blocks with hash pointer inspection | M3 | ORIGINAL_REQUEST §R4 |
-| 11 | F4.2 Simulate Malicious Tamper | Modifies historical block payload, causing cascading downstream crimson invalidation | M3 | ORIGINAL_REQUEST §R4 |
-| 12 | F4.3 Cryptographic Repair & Recalculate | Sequentially re-hashes downstream blocks and restores emerald integrity | M3 | ORIGINAL_REQUEST §R4 |
-| 13 | F5.1 Enterprise Architecture Comparison | Legacy Multi-Tier (850ms, 6 hops) vs OmniGate SAG Agent Link (12ms, 1 local hop) | M1 | ORIGINAL_REQUEST §R5 |
-| 14 | F5.2 Copyable MCP Developer Cards | One-click copyable configuration snippets for Claude Code, Cursor, and Google Antigravity | M1 | ORIGINAL_REQUEST §R5 |
-| 15 | F5.3 Dark Obsidian Glassmorphic Aesthetics | #07090e, #0d121d, radiant neon accents, responsive across desktop and mobile | M1 | ORIGINAL_REQUEST §R5 |
-| 16 | F5.4 Zero-Dependency Client-Side Demo | 100% self-contained demo without backend crashes or console errors; strictly SAG branded | M4 | ORIGINAL_REQUEST §R5 |
+| # | Feature | Description | Milestone | Status |
+|---|---|---|---|---|
+| 1 | Dark Obsidian Theme & Typography | Obsidian palette (#08060e, #0d111d), Outfit/Inter/Mono fonts, responsive glassmorphism | M1 | DONE |
+| 2 | Act I: Visionary Paradigm Shift | $180B ERP disruption narrative, Zero Static UI value prop, 10x latency comparison | M1 | DONE |
+| 3 | Core Engine & DOM Alignment | Fixed syntax error in app.js, unified window.* and ESM exports, aligned container IDs | M1 | DONE |
+| 4 | Act II: 4 Operational Sandboxes | Invoice Anomaly, Supply Chain Saga, Dynamic P&L FX, Zero-Trust RBAC Quarantine | M2 | DONE |
+| 5 | ReAct Terminal Logs | Streaming [THOUGHT], [ACTION], [OBSERVATION], [SYSTEM] traces with authentic entity graphs | M2 | DONE |
+| 6 | Interactive Ephemeral Cards | Stateful cards with functional action buttons (Execute Settlement, Sync Webhooks, etc.) and toast feedback | M2 | DONE |
+| 7 | Act III: Proprietary SAG Moat | Technical explanation of Agent Trajectory Problem (83% failure vs SAG t_safe steering) | M3 | DONE |
+| 8 | Bifurcated DAG Visualizer | Interactive SVG DAG with synchronized node glow highlights, baseline vs steered tracks | M3 | DONE |
+| 9 | Transport Controls & Scrubber | Play/Pause, Step Prev/Next, Jump to t_safe, Reset, Scrubber slider, Speed presets, Risk gauge | M3 | DONE |
+| 10 | Act IV: SHA-256 Block Ledger | Real-time Web Crypto SHA-256 chain, Genesis block (64 zeros), tamper block #2, reverify | M4 | DONE |
+| 11 | Enterprise ROI Calculator | Grounded enterprise math with interactive Headcount, Revenue, Ops Staff sliders & live recalculation | M4 | DONE |
+| 12 | Act V: Social Proof & Benchmarks | SWE-bench 2,294 runs (99.4%), InterCode SQL (98.8%), WebArena, ALFWorld, ToolBench, ATIF | M5 | DONE |
+| 13 | Dedicated Contact Section | Prominent Contact section with direct email info@omnigateos.com and 1-click mailto/copy | M5 | DONE |
+| 14 | Investor Briefing Modal | Interactive modal dialog with seamless form submission and confirmation state | M5 | DONE |
+| 15 | Strict SAG Branding | 100% strict SAG (Semantic Agent Graph) branding, zero occurrences of ActiveGraph | M5 | DONE |
+| 16 | 100% Interactive UI & Zero Dead Clicks | Every button, slider, tab, modal, and copy snippet has working event handlers | M6 | DONE |
+| 17 | Automated Verification Suite | 100% pass on verify_suite.py, verify_m1.py, test_r1_r2_stress.js, test_r3_r4_stress.js, CDP tests | M6 | DONE |
+| 18 | Production Deployment & Git Sync | Deploy to Firebase Hosting (omnigateos.com) and push to GitHub origin/main | M7 | IN_PROGRESS |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
-|---|------|-------|-------------|--------|
-| M1 | Shell, Design System, Architecture & MCP Cards | HTML layout structure, dark obsidian CSS tokens, R5 Architecture Matrix, Copyable MCP Cards | None | DONE |
-| M2 | SAG Studio & Ingestion Hub | Bifurcated DAG Visualizer, Transport Controls, 6 Benchmark Datasets, Telemetry Inspector | M1 | DONE |
-| M3 | Zero-UI Sandbox & Cryptographic Ledger | 4 ERP Scenarios, Ephemeral UI Generator (Widgets, Diffs, Charts), SHA-256 Cascading Tamper & Repair | M1 | DONE |
-| M4 | Integration, State Synchronization & Polishing | Full cross-module wiring, keyboard shortcuts, tooltips, responsive polish, zero console errors | M2, M3 | DONE |
-| M5 | Final Milestone: 100% E2E Pass & Forensic Audit | Verification against 49 test cases in `verify_suite.py` + Adversarial hardening + Forensic Integrity Audit | M4 | DONE |
+|---|---|---|---|---|
+| M1 | Unified Core Engine & UI Architecture | Fix app.js syntax error, align DOM IDs in index.html, implement Contact section, responsive styles | none | DONE |
+| M2 | 4 Operational Sandboxes & Ephemeral Cards | Complete 4 ERP workflows, ReAct telemetry streaming, interactive action buttons with toast notifications | M1 | DONE |
+| M3 | SAG Bifurcated DAG Visualizer & Transport Sync | SVG node glow animation sync, timeline scrubber, transport controls, risk inspector | M1 | DONE |
+| M4 | SHA-256 Block Ledger & Enterprise ROI Calculator | Real-time WebCrypto SHA-256 hashing, tamper simulation, repair recalculation, dynamic ROI sliders | M1 | DONE |
+| M5 | Social Proof, Contact Section & Modals | Benchmark cards, direct info@omnigateos.com channel, Investor Briefing modal, strict SAG branding audit | M1 | DONE |
+| M6 | Comprehensive Verification & Testing Suite | Run and pass verify_suite.py, verify_m1.py, node stress tests, and headless Chrome CDP tests | M2, M3, M4, M5 | DONE |
+| M7 | Production Deployment & Git Sync | Deploy to Firebase Hosting (omnigateos.com) and push clean working tree to GitHub origin/main | M6 | IN_PROGRESS |
+
+## Interface Contracts
+### `app.js` ↔ `index.html`
+- **Global / ESM Exports**:
+  - `window.SAGStudioEngine` / `export const SAGStudioEngine`: Methods `loadBenchmark(id)`, `goToStep(idx)`, `stepPrev()`, `stepNext()`, `jumpToTSafe()`, `reset()`, `togglePlay()`, `setSpeed(spd)`, `setPlaybackMode(mode)`.
+  - `window.SimulatorState` / `export const SimulatorState`: Current active scenario, terminal log history, ephemeral UI state.
+  - `window.Workflows` / `export const Workflows`: Definitions for `audit`, `inventory_stockout`, `sql_financial`, `rbac_quarantine`.
+  - `window.calculateHash` / `export async function calculateHash(index, timestamp, data, previousHash)`.
+  - `window.initLedger`, `window.tamperLedgerBlock2`, `window.repairAndRecalculateLedger`, `window.resetLedger`.
+  - `window.commitLedgerRebalance`, `window.approveWaiver`, `window.dispatchPurchaseOrder`, `window.quarantineSecurityIncident`.
+- **DOM Container IDs**:
+  - `terminal-container`, `ledger-container`, `ephemeral-placeholder`, `ephemeral-ui-container`.
+  - `dag-visualizer-container`, `dag-timeline-scrubber`, `dag-step-counter`, `dag-telemetry-inspector`, `hud-throughput`.
+  - `roi-calculator-container`, `headcount-slider`, `revenue-slider`, `ops-slider`.
+  - `contact`, `contact-email-link`, `investor-modal`.
+
+## Code Layout
+- `website/public/index.html`: Main SPA document containing Acts I–V, DAG SVG markup, ReAct terminal, ROI sliders, SHA-256 ledger, contact section, and investor modal.
+- `website/public/styles.css`: Complete styling rules, obsidian theme custom properties, glassmorphism, pulse keyframes, and media queries.
+- `website/public/app.js`: Unified client-side reactive engine, ReAct streamer, DAG visualizer controller, SHA-256 cryptographic ledger, and ROI calculator math.
+- `website/builder.py`: Python generator template kept in sync with `public/index.html`.

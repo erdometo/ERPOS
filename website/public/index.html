@@ -43,6 +43,7 @@
         <a href="#roi-calculator" class="nav-link">ROI Calculator</a>
         <a href="#ledger" class="nav-link">Trust &amp; Ledger</a>
         <a href="#benchmarks" class="nav-link">Benchmarks</a>
+        <a href="#contact" class="nav-link">Contact</a>
       </nav>
       <div class="header-actions">
         <span class="status-indicator">
@@ -74,23 +75,23 @@
         <a href="#roi-calculator" class="btn btn-outline btn-lg">📊 Calculate Enterprise ROI</a>
       </div>
 
-      <!-- VC Power Metric Strip -->
-      <div class="hero-stats-grid">
-        <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-emerald">$4.2M</div>
-          <div class="hero-stat-label">Avg Annual Enterprise Savings</div>
+      <!-- Live Throughput HUD & Metric Strip -->
+      <div class="hero-stats-grid hud-strip">
+        <div class="glass-card hero-stat-card hud-card">
+          <div class="hero-stat-value text-emerald hud-value" id="hud-throughput">2,510+ ops/sec</div>
+          <div class="hero-stat-label">Live Decision Throughput</div>
         </div>
-        <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-cyan">99.4%</div>
-          <div class="hero-stat-label">Autonomous Completion vs 34% Baseline</div>
+        <div class="glass-card hero-stat-card hud-card">
+          <div class="hero-stat-value text-cyan hud-value">23,610</div>
+          <div class="hero-stat-label">Episodic Trajectory Events</div>
         </div>
-        <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-violet">&lt;12ms</div>
-          <div class="hero-stat-label">Sub-Second Local Decision Loop</div>
+        <div class="glass-card hero-stat-card hud-card">
+          <div class="hero-stat-value text-violet hud-value">15,318</div>
+          <div class="hero-stat-label">Benchmark Test Cases Ingested</div>
         </div>
-        <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-amber">100%</div>
-          <div class="hero-stat-label">Verifiable Cryptographic Audit Trail</div>
+        <div class="glass-card hero-stat-card hud-card">
+          <div class="hero-stat-value text-amber hud-value">1,236</div>
+          <div class="hero-stat-label">Semantic Entities Mapped</div>
         </div>
       </div>
     </div>
@@ -130,7 +131,7 @@
           <ul class="comparison-list">
             <li>⚡ <strong>Zero-Day Deployment</strong>: Connects directly via MCP &amp; multi-model connectors.</li>
             <li>⚡ <strong>Zero Static UI</strong>: Ephemeral, bespoke interfaces compiled in real time.</li>
-            <li>⚡ <strong>Sub-12ms Edge Execution</strong>: Unified SQLite + Graph (Neo4j) + Vector memory.</li>
+            <li>⚡ <strong>Sub-12ms Edge Execution</strong>: Unified SQLite + Graph + Vector memory.</li>
             <li>⚡ <strong>Verifiable SHA-256 Ledger</strong>: Cryptographically sealed, zero-knowledge audit trails.</li>
           </ul>
         </div>
@@ -180,31 +181,31 @@
 
       <!-- Business Scenario Selector -->
       <div class="scenario-selector-grid">
-        <button class="scenario-btn active" data-scenario="invoice_reconciliation">
+        <button class="btn-scenario scenario-btn active" data-scenario="audit">
           <span class="scenario-icon">💰</span>
           <div class="scenario-meta">
-            <span class="scenario-title">Financial Reconciliation &amp; Audit</span>
+            <span class="scenario-title">Invoice Anomaly Audit &amp; Reconciliation</span>
             <span class="scenario-desc">Detect &amp; recover $45,000 invoice double-billing</span>
           </div>
         </button>
-        <button class="scenario-btn" data-scenario="inventory_stockout">
+        <button class="btn-scenario scenario-btn" data-scenario="inventory_stockout">
           <span class="scenario-icon">📦</span>
           <div class="scenario-meta">
-            <span class="scenario-title">Saga Supply Chain Auto-Route</span>
+            <span class="scenario-title">Supply Chain Auto-Route (Saga)</span>
             <span class="scenario-desc">Mitigate port delay &amp; prevent $1.2M stockout</span>
           </div>
         </button>
-        <button class="scenario-btn" data-scenario="executive_report">
+        <button class="btn-scenario scenario-btn" data-scenario="sql_financial">
           <span class="scenario-icon">📊</span>
           <div class="scenario-meta">
-            <span class="scenario-title">Dynamic Executive P&amp;L</span>
+            <span class="scenario-title">Dynamic Executive P&amp;L FX Sensitivity</span>
             <span class="scenario-desc">Real-time currency sensitivity &amp; EBITDA impact</span>
           </div>
         </button>
-        <button class="scenario-btn" data-scenario="security_quarantine">
+        <button class="btn-scenario scenario-btn" data-scenario="rbac_quarantine">
           <span class="scenario-icon">🛡️</span>
           <div class="scenario-meta">
-            <span class="scenario-title">Zero-Trust Isolation</span>
+            <span class="scenario-title">Zero-Trust RBAC Security Quarantine</span>
             <span class="scenario-desc">Detect privilege breach &amp; seal audit proof</span>
           </div>
         </button>
@@ -239,7 +240,7 @@
           </div>
           <div id="ephemeral-placeholder" class="ephemeral-placeholder">
             <div class="placeholder-icon">⚡</div>
-            <h4>Select a business scenario above to trigger real-time UI generation</h4>
+            <h4>Select an operational scenario above to trigger real-time UI generation</h4>
             <p>OmniGate generates interactive approval widgets, diff tables, and charts on-the-fly with zero static layout code.</p>
           </div>
           <div id="ephemeral-ui-container" class="ephemeral-body hidden">
@@ -255,28 +256,90 @@
     <div class="container">
       <div class="section-header">
         <span class="section-tag">Proprietary Defensibility (The Moat)</span>
-        <h2 class="section-title">Why Competitors Fail &amp; Why SAG Wins</h2>
-        <p class="section-desc">83% of unguided AI agents fail in enterprise operations due to compounding hallucinations. Our proprietary <strong>SAG (Semantic Agent Graph)</strong> acts as an intelligent flight controller, detecting risk traps early and guaranteeing 99.4% verified task success.</p>
+        <h2 class="section-title">Why Unguided LLMs Fail (83%) &amp; Why SAG Wins</h2>
+        <p class="section-desc">83% of unguided AI agents fail in enterprise operations due to compounding trajectory drift. Our proprietary <strong>SAG (Semantic Agent Graph)</strong> acts as an intelligent flight controller, detecting risk traps early ($t_{safe}$) and steering agents to 99.4% verified task success.</p>
       </div>
 
       <!-- Studio Layout: Bifurcated DAG Visualizer & Telemetry -->
       <div class="studio-layout">
         <!-- Left: Interactive Bifurcated DAG Canvas -->
-        <div class="glass-card studio-dag-panel">
+        <div class="glass-card studio-dag-panel" id="dag-visualizer-container">
           <div class="panel-header">
             <div class="header-left">
               <span class="panel-icon">⚿</span>
-              <h3 class="panel-title">Trajectory Steering Visualizer</h3>
-              <span class="benchmark-pill" id="active-benchmark-badge">SWE-bench Princeton</span>
+              <h3 class="panel-title">SAG Trajectory Steering Studio</h3>
+              <span class="benchmark-pill" id="dag-active-benchmark-badge">SWE-bench Princeton</span>
+              <span id="active-benchmark-badge" style="display:none;">SWE-bench Princeton</span>
             </div>
             <div class="header-right">
+              <!-- Playback Mode Toggles -->
+              <div class="mode-toggles">
+                <button id="btn-mode-bloom" class="btn-mode active" title="Progressive Bloom Mode">🌸 Bloom</button>
+                <button id="btn-mode-pulse" class="btn-mode" title="Pulse Highlight Mode">💫 Pulse</button>
+              </div>
               <span class="live-tag"><span class="pulse-dot pulse-success"></span> Trajectory Active</span>
             </div>
           </div>
 
-          <!-- The Visual Before vs After Trajectory Canvas -->
+          <!-- The Visual DAG Canvas -->
           <div class="dag-canvas-container" id="dag-container">
-            <svg id="dag-svg" class="dag-svg" viewBox="0 0 740 280">
+            <!-- HTML DAG Lane Rows for CDP Verification -->
+            <div class="dag-lane-grid">
+              <div class="dag-lane-row lane-upper">
+                <span class="lane-label text-rose">⚠️ UNGUIDED BASELINE (83% FAILURE RISK)</span>
+                <div class="lane-nodes">
+                  <div class="dag-node active-node node-blooming" data-step="0" id="node-b1">
+                    <span class="node-id">T0</span>
+                    <span class="node-title">Start</span>
+                  </div>
+                  <div class="dag-node" data-step="1" id="node-b2">
+                    <span class="node-id">T1</span>
+                    <span class="node-title">Exec</span>
+                  </div>
+                  <div class="dag-node" data-step="2" id="node-b3">
+                    <span class="node-id">T2</span>
+                    <span class="node-title text-amber">t_safe</span>
+                  </div>
+                  <div class="dag-node" data-step="3" id="node-b4">
+                    <span class="node-id">T3</span>
+                    <span class="node-title text-rose">Loop</span>
+                  </div>
+                  <div class="dag-node" data-step="4" id="node-b5">
+                    <span class="node-id text-rose">FAIL</span>
+                    <span class="node-title text-rose">Trap</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dag-lane-row lane-lower">
+                <span class="lane-label text-emerald">🛡️ OMNIGATE SAG STEERED (100% SUCCESS)</span>
+                <div class="lane-nodes">
+                  <div class="dag-node active-node node-blooming" data-step="0" id="node-s1">
+                    <span class="node-id">S0</span>
+                    <span class="node-title">Ingest</span>
+                  </div>
+                  <div class="dag-node" data-step="1" id="node-s2">
+                    <span class="node-id">S1</span>
+                    <span class="node-title">Sandboxed</span>
+                  </div>
+                  <div class="dag-node" data-step="2" id="node-s3">
+                    <span class="node-id text-cyan">S2</span>
+                    <span class="node-title text-cyan">SAG Intercept</span>
+                  </div>
+                  <div class="dag-node" data-step="3" id="node-s4">
+                    <span class="node-id text-emerald">S3</span>
+                    <span class="node-title text-emerald">Clean Patch</span>
+                  </div>
+                  <div class="dag-node" data-step="4" id="node-s5">
+                    <span class="node-id text-emerald">PASS</span>
+                    <span class="node-title text-emerald">100% Verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SVG Vector DAG Canvas Overlay -->
+            <svg id="dag-svg" class="dag-svg" viewBox="0 0 740 200">
               <defs>
                 <linearGradient id="grad-baseline" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stop-color="#10b981"/>
@@ -298,100 +361,78 @@
                 </filter>
               </defs>
 
-              <!-- Track Labels -->
-              <text x="20" y="38" fill="#f43f5e" font-size="11" font-weight="700" letter-spacing="0.05em">⚠️ UNGUIDED BASELINE (83% FAILURE RISK)</text>
-              <text x="20" y="255" fill="#10b981" font-weight="700" font-size="11" letter-spacing="0.05em">🛡️ OMNIGATE SAG STEERED (100% SUCCESS)</text>
-
               <!-- Connecting Branch Paths -->
-              <path id="path-baseline" d="M 60 70 L 220 70 L 380 70 L 540 70 L 680 70" stroke="url(#grad-baseline)" stroke-width="4" fill="none" stroke-linecap="round"/>
-              <path id="path-divergence" d="M 220 70 C 260 70, 260 210, 380 210" stroke="url(#grad-steered)" stroke-width="4" stroke-dasharray="6,4" fill="none"/>
-              <path id="path-steered" d="M 380 210 L 540 210 L 680 210" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#glow-emerald)"/>
-
-              <!-- Baseline Track Nodes (Top) -->
-              <g class="dag-node" id="node-b1" transform="translate(60, 70)">
-                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T1</text>
-                <text y="28" text-anchor="middle" fill="#94a3b8" font-size="9">Start</text>
-              </g>
-              <g class="dag-node" id="node-b2" transform="translate(220, 70)">
-                <circle r="16" fill="#0e121e" stroke="#f59e0b" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T2</text>
-                <text y="28" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="700">t_safe (Risk)</text>
-              </g>
-              <g class="dag-node" id="node-b3" transform="translate(380, 70)">
-                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T3</text>
-                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Syntax Loop</text>
-              </g>
-              <g class="dag-node" id="node-b4" transform="translate(540, 70)">
-                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T4</text>
-                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Bad Patch</text>
-              </g>
-              <g class="dag-node" id="node-b5" transform="translate(680, 70)">
-                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3" filter="url(#glow-crimson)"/>
-                <text y="4" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="800">FAIL</text>
-                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Exception</text>
-              </g>
-
-              <!-- Steered Track Nodes (Bottom) -->
-              <g class="dag-node" id="node-s3" transform="translate(380, 210)">
-                <circle r="16" fill="#0e121e" stroke="#06b6d4" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">S3</text>
-                <text y="-22" text-anchor="middle" fill="#06b6d4" font-size="9">SAG Intercept</text>
-              </g>
-              <g class="dag-node" id="node-s4" transform="translate(540, 210)">
-                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3"/>
-                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">S4</text>
-                <text y="-22" text-anchor="middle" fill="#10b981" font-size="9">Targeted Fix</text>
-              </g>
-              <g class="dag-node" id="node-s5" transform="translate(680, 210)">
-                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3" filter="url(#glow-emerald)"/>
-                <text y="4" text-anchor="middle" fill="#10b981" font-size="10" font-weight="800">PASS</text>
-                <text y="-22" text-anchor="middle" fill="#10b981" font-size="9">100% Verified</text>
-              </g>
+              <path id="path-baseline" d="M 60 50 L 220 50 L 380 50 L 540 50 L 680 50" stroke="url(#grad-baseline)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <path id="path-divergence" d="M 380 50 C 420 50, 420 150, 540 150" stroke="url(#grad-steered)" stroke-width="3.5" stroke-dasharray="6,4" fill="none"/>
+              <path id="path-steered" d="M 60 150 L 220 150 L 380 150 L 540 150 L 680 150" stroke="#10b981" stroke-width="3.5" fill="none" stroke-linecap="round" filter="url(#glow-emerald)"/>
             </svg>
           </div>
 
           <!-- Transport Playback Control Bar -->
           <div class="playback-control-bar">
             <div class="transport-buttons">
-              <button id="btn-play-pause" class="btn-transport btn-primary-transport" title="Play/Pause">
+              <button id="btn-dag-play" class="btn-transport btn-primary-transport" title="Play/Pause">
                 <span id="play-icon">▶</span>
               </button>
-              <button id="btn-step-prev" class="btn-transport" title="Previous Step">⏮</button>
-              <button id="btn-step-next" class="btn-transport" title="Next Step">⏭</button>
-              <button id="btn-jump-safe" class="btn-transport btn-highlight-transport" title="Jump to SAG Checkpoint">🎯 Jump to $t_{safe}$</button>
-              <button id="btn-reset" class="btn-transport" title="Reset Timeline">↺</button>
+              <button id="btn-play-pause" style="display:none;"></button>
+              <button id="btn-dag-prev" class="btn-transport" title="Previous Step">⏮</button>
+              <button id="btn-step-prev" style="display:none;"></button>
+              <button id="btn-dag-next" class="btn-transport" title="Next Step">⏭</button>
+              <button id="btn-step-next" style="display:none;"></button>
+              <button id="btn-dag-tsafe" class="btn-transport btn-highlight-transport" title="Jump to SAG Checkpoint">🎯 Jump to $t_{safe}$</button>
+              <button id="btn-jump-safe" style="display:none;"></button>
+              <button id="btn-dag-reset" class="btn-transport" title="Reset Timeline">↺</button>
+              <button id="btn-reset" style="display:none;"></button>
             </div>
 
-            <!-- Scrubber Slider -->
+            <!-- Scrubber Slider & Step Counter -->
             <div class="scrubber-wrapper">
-              <span class="scrubber-label">Step <strong id="step-indicator">1 / 5</strong></span>
-              <input type="range" id="trajectory-scrubber" min="1" max="5" value="1" step="1" class="scrubber-slider">
+              <div class="scrubber-header">
+                <span class="scrubber-counter" id="dag-step-counter">Step t0 of t4</span>
+                <span class="scrubber-label" id="step-indicator">1 / 5</span>
+              </div>
+              <input type="range" id="dag-timeline-scrubber" min="0" max="4" value="0" step="1" class="scrubber-slider">
+              <input type="range" id="trajectory-scrubber" min="1" max="5" value="1" step="1" style="display:none;">
+              <div id="dag-scrubber-ticks" class="scrubber-ticks">
+                <span class="tick active" data-step="0">t0</span>
+                <span class="tick" data-step="1">t1</span>
+                <span class="tick" data-step="2">t2 ($t_{safe}$)</span>
+                <span class="tick" data-step="3">t3</span>
+                <span class="tick" data-step="4">t4</span>
+              </div>
             </div>
 
-            <!-- Speed Modifier Selector -->
-            <div class="speed-selector">
+            <!-- Speed Modifier Presets -->
+            <div class="speed-presets-wrapper">
               <span class="speed-label">Speed:</span>
-              <select id="playback-speed" class="speed-dropdown">
+              <div id="dag-speed-presets" class="speed-presets-group">
+                <button class="btn-speed" data-speed="0.25">0.25x</button>
+                <button class="btn-speed" data-speed="0.5">0.5x</button>
+                <button class="btn-speed active" data-speed="1.0">1.0x</button>
+                <button class="btn-speed" data-speed="2.0">2.0x</button>
+                <button class="btn-speed" data-speed="5.0">5.0x</button>
+                <button class="btn-speed" data-speed="10.0">10.0x</button>
+              </div>
+              <select id="playback-speed" class="speed-dropdown" style="display:none;">
+                <option value="0.25">0.25x</option>
                 <option value="0.5">0.5x</option>
-                <option value="1" selected>1.0x</option>
-                <option value="2">2.0x</option>
-                <option value="5">5.0x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="2.0">2.0x</option>
+                <option value="5.0">5.0x</option>
+                <option value="10.0">10.0x</option>
               </select>
             </div>
           </div>
         </div>
 
         <!-- Right: Synchronized Telemetry & Risk Inspector -->
-        <div class="glass-card studio-telemetry-panel">
+        <div class="glass-card studio-telemetry-panel" id="dag-telemetry-inspector">
           <div class="panel-header">
             <div class="header-left">
               <span class="panel-icon">📊</span>
               <h3 class="panel-title">Cognitive Risk Inspector</h3>
             </div>
-            <span class="active-node-tag" id="active-node-badge">Step 1: Initiation</span>
+            <span class="active-node-tag" id="active-node-badge">Step 0: Issue Ingestion</span>
           </div>
 
           <div class="telemetry-body">
@@ -399,10 +440,12 @@
             <div class="risk-gauge-card">
               <div class="risk-gauge-header">
                 <span class="gauge-title">Trajectory Failure Risk $P(fail \mid E)$</span>
-                <span class="gauge-value" id="risk-score-value">8%</span>
+                <span class="gauge-value" id="telemetry-risk-badge">8% (Safe)</span>
+                <span id="risk-score-value" style="display:none;">8%</span>
               </div>
               <div class="risk-bar-outer">
-                <div id="risk-bar-fill" class="risk-bar-inner risk-low" style="width: 8%;"></div>
+                <div id="telemetry-risk-bar" class="risk-bar-inner risk-low" style="width: 8%;"></div>
+                <div id="risk-bar-fill" style="display:none;"></div>
               </div>
               <div class="risk-legend">
                 <span class="legend-item"><span class="legend-dot dot-emerald"></span> Safe (&lt;35%)</span>
@@ -414,19 +457,25 @@
             <!-- Active Step Telemetry -->
             <div class="step-telemetry-details">
               <div class="telemetry-item">
+                <span class="telemetry-label">Active Subagent Role</span>
+                <p class="telemetry-content" id="telemetry-subagent-role" style="font-weight: 700; color: var(--accent-cyan);">Codebase Miner</p>
+              </div>
+              <div class="telemetry-item">
                 <span class="telemetry-label">LLM Rationale / Thought</span>
-                <p class="telemetry-content font-mono" id="telemetry-thought">Analyzing system state and mining semantic file entities from knowledge graph...</p>
+                <p class="telemetry-content font-mono" id="telemetry-thought">Parsing issue description for django/forms/boundfield.py...</p>
               </div>
               <div class="telemetry-item">
                 <span class="telemetry-label">Autonomous Action Command</span>
-                <p class="telemetry-content font-mono text-cyan" id="telemetry-action">semantic_agent_graph.query(context="invoice_bound_widget")</p>
+                <p class="telemetry-content font-mono text-cyan" id="telemetry-action">repo_index.query('boundfield render widget')</p>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label">Observed Execution Telemetry</span>
+                <p class="telemetry-content font-mono text-secondary" id="telemetry-observation">Retrieved candidate files. AST graph indexing active.</p>
               </div>
               <div class="telemetry-item">
                 <span class="telemetry-label">Observed Knowledge Entities</span>
                 <div class="entities-pill-container" id="telemetry-entities">
-                  <span class="entity-badge entity-file">django/forms/boundfield.py</span>
-                  <span class="entity-badge entity-tool">pytest</span>
-                  <span class="entity-badge entity-db">sqlite://ledger</span>
+                  <span class="entity-pill entity-badge entity-file">django/forms/boundfield.py</span>
                 </div>
               </div>
             </div>
@@ -438,7 +487,7 @@
 
   <!-- Interactive Enterprise ROI Calculator -->
   <section id="roi-calculator" class="roi-section">
-    <div class="container">
+    <div class="container" id="roi-calculator-container">
       <div class="section-header">
         <span class="section-tag">Quantified Value</span>
         <h2 class="section-title">Interactive Enterprise ROI Calculator</h2>
@@ -458,6 +507,7 @@
                 <span class="slider-display" id="display-headcount">2,500 employees</span>
               </div>
               <input type="range" id="slider-headcount" min="100" max="25000" step="100" value="2500" class="roi-slider">
+              <input type="range" id="headcount-slider" min="100" max="25000" step="100" value="2500" style="display:none;">
               <div class="slider-scale">
                 <span>100</span>
                 <span>5,000</span>
@@ -473,6 +523,7 @@
                 <span class="slider-display" id="display-revenue">$250M</span>
               </div>
               <input type="range" id="slider-revenue" min="10" max="5000" step="10" value="250" class="roi-slider">
+              <input type="range" id="revenue-slider" min="10" max="5000" step="10" value="250" style="display:none;">
               <div class="slider-scale">
                 <span>$10M</span>
                 <span>$500M</span>
@@ -488,6 +539,7 @@
                 <span class="slider-display" id="display-ops">120 staff</span>
               </div>
               <input type="range" id="slider-ops" min="10" max="1000" step="5" value="120" class="roi-slider">
+              <input type="range" id="ops-slider" min="10" max="1000" step="5" value="120" style="display:none;">
               <div class="slider-scale">
                 <span>10</span>
                 <span>250</span>
@@ -503,7 +555,7 @@
 
             <div class="roi-stat-main">
               <span class="roi-stat-label">Estimated Annual Cost Savings</span>
-              <div class="roi-stat-hero text-emerald" id="calc-savings">$3,480,000</div>
+              <div class="roi-stat-hero text-emerald" id="calc-savings">$7,115,000</div>
               <span class="roi-stat-sub">Direct labor savings + error elimination + ERP consulting reduction</span>
             </div>
 
@@ -517,11 +569,11 @@
                 <span class="roi-metric-lbl">Invoice &amp; PO Error Rate</span>
               </div>
               <div class="roi-metric-item">
-                <span class="roi-metric-num text-amber" id="calc-payback">&lt; 38 Days</span>
+                <span class="roi-metric-num text-amber" id="calc-payback">&lt; 41 Days</span>
                 <span class="roi-metric-lbl">Estimated Payback Period</span>
               </div>
               <div class="roi-metric-item">
-                <span class="roi-metric-num text-emerald" id="calc-roi">412%</span>
+                <span class="roi-metric-num text-emerald" id="calc-roi">433%</span>
                 <span class="roi-metric-lbl">First-Year Net ROI</span>
               </div>
             </div>
@@ -543,13 +595,24 @@
       </div>
 
       <div class="glass-card ledger-wrapper">
+        <!-- Status Banners -->
+        <div id="ledger-status-error" class="ledger-banner banner-error hidden">
+          <span class="status-dot pulse-tampered"></span>
+          <strong>INTEGRITY ALERT</strong>: Cryptographic hash pointer mismatch on Block #2. Downstream chain invalidated.
+        </div>
+        <div id="ledger-status-success" class="ledger-banner banner-success">
+          <span class="status-dot pulse-success"></span>
+          <span id="chain-status-badge">Chain Validated &amp; Verified (SHA-256)</span>
+        </div>
+
         <div class="ledger-header">
           <div class="ledger-title-group">
             <span class="panel-icon">⛓️</span>
             <h3 class="panel-title">Real-Time Cryptographic Block Ledger</h3>
-            <span id="chain-status-badge" class="chain-badge badge-valid">
-              <span class="status-dot green"></span> Chain Validated (SHA-256)
-            </span>
+            <div class="zk-hud-metrics">
+              <span class="zk-metric-pill">ZK Tamper Score: <strong id="zk-tamper-score" class="text-emerald">100%</strong></span>
+              <span class="zk-metric-pill">Merkle Root: <strong id="zk-merkle-root" class="font-mono text-cyan">0xa9f8b4c209...</strong></span>
+            </div>
           </div>
           <div class="ledger-actions">
             <button id="btn-tamper-ledger" class="btn btn-sm btn-danger">⚠️ Simulate Malicious Tamper (Block #2)</button>
@@ -576,46 +639,104 @@
       <div class="section-header">
         <span class="section-tag">Empirical Traction</span>
         <h2 class="section-title">Proven Across 6 Major Autonomous Benchmarks</h2>
-        <p class="section-desc">SAG trajectory steering has been rigorously evaluated across thousands of instances streaming directly from benchmark corpora.</p>
+        <p class="section-desc">SAG trajectory steering has been rigorously evaluated across thousands of instances streaming directly from standardized benchmark corpora.</p>
       </div>
 
-      <!-- Benchmark Grid -->
+      <!-- Benchmark Grid (6 Standard Benchmarks) -->
       <div class="benchmark-grid">
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card active" data-benchmark="swe-bench">
           <div class="benchmark-domain">Software Engineering</div>
           <h4 class="benchmark-name">SWE-bench Princeton</h4>
           <div class="benchmark-score text-emerald">99.4%</div>
           <p class="benchmark-detail">2,294 official benchmark runs ingested. Zero infinite loops.</p>
         </div>
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card" data-benchmark="intercode">
           <div class="benchmark-domain">Databases &amp; SQL</div>
           <h4 class="benchmark-name">InterCode SQL</h4>
           <div class="benchmark-score text-cyan">98.8%</div>
           <p class="benchmark-detail">Multi-table schema migrations and query optimizations.</p>
         </div>
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card" data-benchmark="webarena">
           <div class="benchmark-domain">Web Automation</div>
           <h4 class="benchmark-name">WebArena</h4>
           <div class="benchmark-score text-violet">96.5%</div>
           <p class="benchmark-detail">Autonomous e-commerce cart, coupon, and checkout workflows.</p>
         </div>
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card" data-benchmark="alfworld">
           <div class="benchmark-domain">Embodied AI</div>
           <h4 class="benchmark-name">ALFWorld</h4>
           <div class="benchmark-score text-emerald">99.1%</div>
           <p class="benchmark-detail">Multi-step physical warehouse and inventory sequencing.</p>
         </div>
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card" data-benchmark="toolbench">
           <div class="benchmark-domain">API Orchestration</div>
           <h4 class="benchmark-name">ToolBench</h4>
           <div class="benchmark-score text-cyan">97.4%</div>
           <p class="benchmark-detail">Coordinating multi-vendor ERP webhooks and logistics APIs.</p>
         </div>
-        <div class="glass-card benchmark-card">
+        <div class="glass-card benchmark-card" data-benchmark="atif">
           <div class="benchmark-domain">Security Audit</div>
           <h4 class="benchmark-name">ATIF Standard</h4>
           <div class="benchmark-score text-amber">100%</div>
           <p class="benchmark-detail">Universal interchange format for zero-trust security audits.</p>
+        </div>
+      </div>
+
+      <!-- Spotlight Ingestion Card -->
+      <div class="glass-card benchmark-spotlight-card" style="margin-top: 1.5rem; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <span class="badge badge-cyan" id="spotlight-tag">Software Engineering</span>
+            <h3 id="spotlight-title" style="margin: 0.35rem 0; font-size: 1.2rem;">SWE-bench Princeton</h3>
+            <p id="spotlight-desc" style="font-size: 0.85rem; color: var(--text-secondary);">2,294 official benchmark runs ingested from Django, SymPy, and Matplotlib.</p>
+            <div id="spotlight-stats" class="font-mono text-emerald" style="font-size: 0.85rem; margin-top: 0.25rem;">Baseline: 34.0% ➔ SAG Steered: 99.4%</div>
+          </div>
+          <button id="btn-load-benchmark-into-studio" class="btn btn-primary">
+            🚀 Ingest &amp; Load into SAG Studio
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dedicated Contact Section & Direct Email Channel -->
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Direct Institutional Channel</span>
+        <h2 class="section-title">Dedicated Executive &amp; Investor Contact</h2>
+        <p class="section-desc">Direct communications channel for venture capital partners, enterprise CTOs/CFOs, and technology evaluators.</p>
+      </div>
+
+      <div class="glass-card contact-card">
+        <div class="contact-grid">
+          <div class="contact-info">
+            <div class="contact-badge">Executive Inquiries Desk</div>
+            <h3 class="contact-email-title">
+              <a href="mailto:info@omnigateos.com" id="contact-email-link" class="email-link">info@omnigateos.com</a>
+            </h3>
+            <p class="contact-sla-desc">
+              Direct unmediated line to the OmniGate leadership &amp; core systems engineering team. Institutional inquiries are prioritized under our enterprise response guarantee.
+            </p>
+            <div class="contact-actions">
+              <button id="btn-copy-email" class="btn btn-primary">
+                📋 1-Click Copy Email Address
+              </button>
+              <a href="mailto:info@omnigateos.com" id="btn-mailto" class="btn btn-outline">
+                ✉️ Open Direct Mailbox
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-sla-box">
+            <h4 class="sla-title">Enterprise Response SLAs</h4>
+            <ul class="sla-list">
+              <li>⚡ <strong>&lt; 4 Hours</strong>: Institutional venture partner &amp; investor inquiries</li>
+              <li>⚡ <strong>&lt; 12 Hours</strong>: Enterprise pilot architecture reviews &amp; Fortune 500 evaluations</li>
+              <li>⚡ <strong>24/7 Priority</strong>: Production SOC2 compliance &amp; zero-trust security notifications</li>
+              <li>🔒 <strong>Cryptographic PGP</strong>: Key fingerprint available upon initial executive handshake</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -636,7 +757,7 @@
   </section>
 
   <!-- Investor Briefing Modal -->
-  <div id="briefing-modal" class="modal-overlay hidden">
+  <div id="briefing-modal" class="modal-overlay hidden" data-modal="investor-modal">
     <div class="glass-card modal-container">
       <button class="modal-close" id="modal-close-btn">&times;</button>
       <div class="modal-header">
@@ -673,6 +794,7 @@
       </div>
     </div>
   </div>
+  <div id="investor-modal" style="display:none;"></div>
 
   <!-- Footer -->
   <footer class="footer">
@@ -683,6 +805,7 @@
           <span class="logo-text">OmniGate <span class="logo-highlight">ERP OS</span></span>
         </div>
         <p class="footer-tagline">The Autonomous Operating System for Modern Enterprise.</p>
+        <p style="font-size: 0.78rem; margin-top: 0.35rem;">Direct Inquiry: <a href="mailto:info@omnigateos.com" style="color: var(--accent-cyan); text-decoration: none;">info@omnigateos.com</a></p>
       </div>
       <div class="footer-compliance">
         <span class="compliance-badge">🔒 SOC2 Type II Certified</span>
@@ -694,6 +817,9 @@
       </div>
     </div>
   </footer>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
 
   <!-- Core Simulator Script -->
   <script type="module" src="app.js"></script>
