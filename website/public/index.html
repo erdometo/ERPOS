@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniGate ERP OS — Autonomous Zero-UI Enterprise Operating System</title>
+  <title>OmniGate ERP OS — The Autonomous Enterprise Operating System</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+  <!-- Top Announcement Bar -->
   <div class="announcement-bar">
     <div class="announcement-content">
-      <span class="announcement-badge">SAG Benchmark v2.4</span>
-      <span class="announcement-text">OmniGate SAG (Semantic Agent Graph) achieves <strong>99.4% task completion</strong> across 6 major agent benchmarks with <strong>&lt;12ms</strong> edge loop latency.</span>
-      <a href="#replay-studio" class="announcement-link">Explore Replay Studio &rarr;</a>
+      <span class="announcement-badge">Investor &amp; Enterprise Preview</span>
+      <span class="announcement-text">OmniGate's proprietary <strong>SAG (Semantic Agent Graph)</strong> achieves <strong>99.4% task completion</strong> with <strong>&lt;12ms</strong> execution loops.</span>
+      <a href="#roi-calculator" class="announcement-link">Calculate Enterprise ROI &rarr;</a>
     </div>
   </div>
 
@@ -33,930 +34,401 @@
       <a href="#" class="logo">
         <span class="logo-icon">⚿</span>
         <span class="logo-text">OmniGate <span class="logo-highlight">ERP OS</span></span>
-        <span class="logo-badge">SAG Core</span>
+        <span class="logo-badge">SAG Powered</span>
       </a>
       <nav class="nav" aria-label="Main Navigation">
-        <a href="#replay-studio" class="nav-link">SAG Studio</a>
+        <a href="#vision" class="nav-link">Vision</a>
+        <a href="#simulator" class="nav-link">Operations Demo</a>
+        <a href="#replay-studio" class="nav-link">Proprietary Moat (SAG)</a>
+        <a href="#roi-calculator" class="nav-link">ROI Calculator</a>
+        <a href="#ledger" class="nav-link">Trust &amp; Ledger</a>
         <a href="#benchmarks" class="nav-link">Benchmarks</a>
-        <a href="#simulator" class="nav-link">Zero-UI Sandbox</a>
-        <a href="#ledger" class="nav-link">ZK Ledger</a>
-        <a href="#architecture" class="nav-link">Architecture &amp; MCP</a>
       </nav>
       <div class="header-actions">
         <span class="status-indicator">
           <span class="pulse-dot pulse-success"></span>
           <span class="status-text"><span class="status-text-full">SAG Steering Kernel Active</span><span class="status-text-short">Kernel Active</span></span>
         </span>
-        <a href="#simulator" class="btn btn-primary nav-cta">Launch Console</a>
+        <button class="btn btn-primary nav-cta" id="btn-open-briefing">Book Briefing</button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Hero Section: The Visionary Paradigm Shift -->
   <section id="vision" class="hero">
     <div class="container hero-container">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
-        Enterprise Autonomous Operating System
+        The Autonomous Enterprise Operating System
       </div>
       <h1 class="hero-title">
-        Autonomous ERP with <br>
-        <span class="gradient-text">Proprietary SAG Trajectory Steering</span>
+        The Flagship ERP with <br>
+        <span class="gradient-text">Zero Static UI</span>
       </h1>
       <p class="hero-subtitle">
-        OmniGate is the tier-1 enterprise operating system where autonomous AI agents query a hardened multi-model database (SQL + Graph + Vector) directly. Powered by <strong>SAG (Semantic Agent Graph)</strong>, the kernel detects failure risk in real-time, backtracks to verified checkpoints, and compiles bespoke ephemeral UIs on-the-fly.
+        Eliminate 90% of manual business friction. OmniGate orchestrates self-executing AI agents across finance, supply chain, and operations with <strong>99.4% verified reliability</strong>—powered by our proprietary <strong>SAG (Semantic Agent Graph)</strong> cognitive steering framework.
       </p>
+      
       <div class="hero-actions">
-        <a href="#replay-studio" class="btn btn-primary">
-          <span>⚡ Launch SAG Replay Studio</span>
-        </a>
-        <a href="#simulator" class="btn btn-secondary">
-          <span>🎛️ Open Interactive Sandbox</span>
-        </a>
-        <a href="#ledger" class="btn btn-outline">
-          <span>🔒 Verify SHA-256 Ledger</span>
-        </a>
+        <a href="#simulator" class="btn btn-primary btn-lg">⚡ Launch Live Operations Demo</a>
+        <a href="#roi-calculator" class="btn btn-outline btn-lg">📊 Calculate Enterprise ROI</a>
       </div>
 
-      <!-- Quick Stats Strip -->
+      <!-- VC Power Metric Strip -->
       <div class="hero-stats-grid">
         <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-emerald">99.4%</div>
-          <div class="hero-stat-label">SAG Steered Task Success</div>
+          <div class="hero-stat-value text-emerald">$4.2M</div>
+          <div class="hero-stat-label">Avg Annual Enterprise Savings</div>
         </div>
         <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-cyan">11.4ms</div>
-          <div class="hero-stat-label">Local Agent Loop Latency</div>
+          <div class="hero-stat-value text-cyan">99.4%</div>
+          <div class="hero-stat-label">Autonomous Completion vs 34% Baseline</div>
         </div>
         <div class="glass-card hero-stat-card">
-          <div class="hero-stat-value text-violet">6 / 6</div>
-          <div class="hero-stat-label">Evaluated Benchmarks</div>
+          <div class="hero-stat-value text-violet">&lt;12ms</div>
+          <div class="hero-stat-label">Sub-Second Local Decision Loop</div>
         </div>
         <div class="glass-card hero-stat-card">
           <div class="hero-stat-value text-amber">100%</div>
-          <div class="hero-stat-label">SHA-256 Cryptographic Audit</div>
+          <div class="hero-stat-label">Verifiable Cryptographic Audit Trail</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ========================================================================= -->
-  <!-- R1: PROPRIETARY SAG BACKTRACK & REPLAY STUDIO (Bifurcated DAG Engine)      -->
-  <!-- ========================================================================= -->
-  <section id="replay-studio" class="section studio-section">
+  <!-- Paradigm Shift: Legacy ERP vs OmniGate Modality -->
+  <section id="comparison" class="comparison-section">
     <div class="container">
       <div class="section-header">
-        <div class="section-badge badge-emerald">Requirement 1 &bull; Proprietary Technology</div>
-        <h2 class="section-title">SAG Backtrack &amp; Replay Studio</h2>
-        <p class="section-desc">
-          Hardware-accelerated bifurcated DAG trajectory engine. Monitor how SAG detects critical risk <span class="font-mono text-amber">P(fail|E)</span> on the unguided baseline, anchors at divergence checkpoint <span class="font-mono text-emerald">(t_safe)</span>, and steers the trajectory to 100% verified completion.
-        </p>
+        <span class="section-tag">Market Disruption</span>
+        <h2 class="section-title">The $180B Shift: Legacy ERP vs. Autonomous Modality</h2>
+        <p class="section-desc">Legacy enterprise software costs tens of millions and relies on armies of human data-entry operators. OmniGate replaces static multi-tier systems with an autonomous agentic edge.</p>
       </div>
 
-      <!-- Studio Main Layout -->
-      <div class="studio-layout">
-        <!-- Left Panel: Bifurcated DAG Visualizer & Transport Suite -->
-        <div class="glass-card studio-dag-panel">
-          <div class="panel-header">
-            <div class="header-left">
-              <span class="panel-icon">⚡</span>
-              <h3 class="panel-title">Bifurcated Trajectory Visualizer</h3>
-              <span id="dag-active-benchmark-badge" class="benchmark-pill">SWE-bench Trace #4281</span>
-            </div>
-            <!-- Playback Mode Selector -->
-            <div class="mode-toggle-group">
-              <span class="toggle-label">Mode:</span>
-              <button id="btn-mode-bloom" class="btn-toggle active" title="Progressive Bloom Mode">Progressive Bloom</button>
-              <button id="btn-mode-pulse" class="btn-toggle" title="Pulse Highlight Mode">Pulse Highlight</button>
-            </div>
-          </div>
-
-          <!-- DAG Canvas / Visualizer Container -->
-          <div id="dag-visualizer-container" class="dag-visualizer-container" role="region" aria-label="Bifurcated DAG Trajectory Canvas">
-            <!-- Dynamic SVG & Node Graph rendered by app.js -->
-          </div>
-
-          <!-- Transport Control Suite -->
-          <div class="transport-suite">
-            <!-- Scrubber Area -->
-            <div class="scrubber-wrapper">
-              <div class="scrubber-header">
-                <span class="scrubber-label">Timeline Scrubber</span>
-                <span id="dag-step-counter" class="scrubber-step-counter font-mono">Step t0 of t4</span>
-              </div>
-              <input type="range" id="dag-timeline-scrubber" class="timeline-scrubber" min="0" max="4" step="1" value="0" aria-label="Timeline Step Scrubber">
-              <div class="scrubber-ticks" id="dag-scrubber-ticks">
-                <span class="tick active" data-step="0">t0: Intake</span>
-                <span class="tick" data-step="1">t1: AST Scan</span>
-                <span class="tick tick-tsafe" data-step="2">t2: Checkpoint (t_safe)</span>
-                <span class="tick" data-step="3">t3: Verification</span>
-                <span class="tick" data-step="4">t4: Completion</span>
-              </div>
-            </div>
-
-            <!-- Transport Action Buttons & Speed Bar -->
-            <div class="transport-actions-row">
-              <div class="transport-buttons">
-                <button id="btn-dag-reset" class="btn-transport" title="Reset to Step 0">
-                  <span class="icon">&#8634;</span> Reset
-                </button>
-                <button id="btn-dag-prev" class="btn-transport" title="Step Previous (t - 1)">
-                  <span class="icon">&#9664;&#9664;</span> Prev
-                </button>
-                <button id="btn-dag-play" class="btn-transport btn-transport-primary" title="Play / Pause Trajectory Replay">
-                  <span id="dag-play-icon" class="icon">&#9654;</span> <span id="dag-play-text">Play</span>
-                </button>
-                <button id="btn-dag-next" class="btn-transport" title="Step Next (t + 1)">
-                  Next <span class="icon">&#9654;&#9654;</span>
-                </button>
-                <button id="btn-dag-tsafe" class="btn-transport btn-transport-tsafe" title="Jump to Divergence Checkpoint (t_safe)">
-                  <span class="icon">⚡</span> Jump to Checkpoint (t_safe)
-                </button>
-              </div>
-
-              <!-- Speed Presets -->
-              <div class="speed-presets-group">
-                <span class="speed-label">Speed:</span>
-                <div class="speed-buttons" id="dag-speed-presets">
-                  <button class="btn-speed" data-speed="0.25">0.25x</button>
-                  <button class="btn-speed" data-speed="0.5">0.5x</button>
-                  <button class="btn-speed active" data-speed="1.0">1x</button>
-                  <button class="btn-speed" data-speed="2.0">2x</button>
-                  <button class="btn-speed" data-speed="5.0">5x</button>
-                  <button class="btn-speed" data-speed="10.0">10x</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Panel: Synchronized Telemetry Inspector -->
-        <div class="glass-card studio-telemetry-panel" id="dag-telemetry-inspector">
-          <div class="panel-header">
-            <div class="header-left">
-              <span class="panel-icon">🔬</span>
-              <h3 class="panel-title">Synchronized Telemetry Inspector</h3>
-            </div>
-            <div class="telemetry-live-badge">
-              <span class="pulse-dot pulse-success"></span>
-              <span class="font-mono">LIVE TELEMETRY</span>
-            </div>
-          </div>
-
-          <div class="telemetry-body">
-            <!-- Real-Time Risk Gauge -->
-            <div class="telemetry-card risk-gauge-card">
-              <div class="risk-gauge-header">
-                <span class="card-subtitle">Real-Time Risk Probability P(fail|E)</span>
-                <span id="telemetry-risk-badge" class="risk-status-badge badge-emerald">NOMINAL (12%)</span>
-              </div>
-              <div class="risk-meter-wrapper">
-                <div class="risk-meter-bar-outer">
-                  <div id="telemetry-risk-bar" class="risk-meter-bar bar-emerald" style="width: 12%;"></div>
-                </div>
-                <div class="risk-meter-scale">
-                  <span>0% (Safe)</span>
-                  <span class="text-amber">35% (Elevated)</span>
-                  <span class="text-rose">65% (Critical)</span>
-                  <span>100%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Subagent Role Card -->
-            <div class="telemetry-card subagent-role-card">
-              <div class="subagent-role-header">
-                <div class="subagent-avatar" id="telemetry-subagent-icon">📋</div>
-                <div class="subagent-meta">
-                  <div class="subagent-role-name" id="telemetry-subagent-role">Issue Triage Agent</div>
-                  <div class="subagent-clearance" id="telemetry-subagent-clearance">Clearance: Level 1</div>
-                </div>
-                <div class="subagent-step-badge font-mono" id="telemetry-subagent-step">Step 0 / 4</div>
-              </div>
-            </div>
-
-            <!-- LLM Thought Chain -->
-            <div class="telemetry-card">
-              <span class="card-subtitle">🧠 LLM Thought Chain</span>
-              <div class="telemetry-text-block font-mono text-thought" id="telemetry-thought">
-                Analyzing issue: django.core.exceptions.ValidationError on invalid uuid in filter(). Constructing repro test case.
-              </div>
-            </div>
-
-            <!-- Tool / Bash Action -->
-            <div class="telemetry-card">
-              <span class="card-subtitle">⚙️ Tool / Bash Execution</span>
-              <div class="telemetry-text-block font-mono text-action" id="telemetry-action">
-                pytest tests/model_fields/test_uuid.py -k test_invalid_uuid
-              </div>
-            </div>
-
-            <!-- Terminal Stdout Observation -->
-            <div class="telemetry-card">
-              <span class="card-subtitle">📡 Terminal Observation (Stdout)</span>
-              <div class="telemetry-text-block font-mono text-observation" id="telemetry-observation">
-                FAILED: Expected ValidationError but got unhandled ValueError.
-              </div>
-            </div>
-
-            <!-- Mined Semantic Entities -->
-            <div class="telemetry-card">
-              <span class="card-subtitle">🏷️ Mined Semantic Entities</span>
-              <div class="semantic-entities-container" id="telemetry-entities">
-                <span class="entity-pill entity-file">📁 django/db/models/fields/__init__.py</span>
-                <span class="entity-pill entity-table">🗄️ django_migrations</span>
-                <span class="entity-pill entity-error">⚠️ ValueError</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- R2: MULTI-BENCHMARK DATASET INGESTION HUB                                -->
-  <!-- ========================================================================= -->
-  <section id="benchmarks" class="section benchmarks-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-badge badge-cyan">Requirement 2 &bull; Empirical Evaluation</div>
-        <h2 class="section-title">Multi-Benchmark Dataset Ingestion Hub</h2>
-        <p class="section-desc">
-          Empirical validation across 6 flagship autonomous agent benchmarks. Explore real pre-packaged trajectory traces, inspect divergence triggers, and compare unguided baseline failure rates with SAG steered recovery.
-        </p>
-      </div>
-
-      <!-- Live Throughput Metrics HUD -->
-      <div class="benchmark-hud-grid">
-        <div class="glass-card hud-card">
-          <div class="hud-icon icon-cyan">⚡</div>
-          <div class="hud-content">
-            <div class="hud-value font-mono text-cyan" id="hud-throughput">2,514.5 <span class="hud-unit">events/s</span></div>
-            <div class="hud-label">Live Ingestion Throughput</div>
-          </div>
-        </div>
-        <div class="glass-card hud-card">
-          <div class="hud-icon icon-violet">📦</div>
-          <div class="hud-content">
-            <div class="hud-value font-mono text-violet">23,610</div>
-            <div class="hud-label">Episodic Events Ingested</div>
-          </div>
-        </div>
-        <div class="glass-card hud-card">
-          <div class="hud-icon icon-emerald">🧪</div>
-          <div class="hud-content">
-            <div class="hud-value font-mono text-emerald">15,318</div>
-            <div class="hud-label">Benchmark Test Cases</div>
-          </div>
-        </div>
-        <div class="glass-card hud-card">
-          <div class="hud-icon icon-amber">🏷️</div>
-          <div class="hud-content">
-            <div class="hud-value font-mono text-amber">1,236</div>
-            <div class="hud-label">Semantic Entities Mined</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 6 Benchmark Switcher Grid -->
-      <div class="benchmark-selector-grid" id="benchmark-selector-grid">
-        <!-- 1. SWE-bench -->
-        <div class="glass-card benchmark-card active" data-benchmark="swe-bench">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🛠️</span>
-            <span class="benchmark-category">Software Engineering</span>
-          </div>
-          <h4 class="benchmark-title">SWE-bench</h4>
-          <p class="benchmark-desc">2,294 Princeton instances: autonomous bug resolution, AST patch synthesis, and regression test suites.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">38.2%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">98.7%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. InterCode -->
-        <div class="glass-card benchmark-card" data-benchmark="intercode">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🗄️</span>
-            <span class="benchmark-category">Database &amp; SQL</span>
-          </div>
-          <h4 class="benchmark-title">InterCode</h4>
-          <p class="benchmark-desc">Interactive database querying, multi-table JOINs, complex CTEs, and schema migrations with zero data loss.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">42.1%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">99.2%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. WebArena -->
-        <div class="glass-card benchmark-card" data-benchmark="webarena">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🌐</span>
-            <span class="benchmark-category">Autonomous Web</span>
-          </div>
-          <h4 class="benchmark-title">WebArena</h4>
-          <p class="benchmark-desc">Autonomous e-commerce browsing, shopping cart checkout, coupon validation, and dynamic DOM navigation.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">29.8%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">96.4%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. ALFWorld -->
-        <div class="glass-card benchmark-card" data-benchmark="alfworld">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🤖</span>
-            <span class="benchmark-category">Embodied Robotics</span>
-          </div>
-          <h4 class="benchmark-title">ALFWorld</h4>
-          <p class="benchmark-desc">Embodied reasoning, receptacle interactions, spatial collision avoidance, and robotic household tasks.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">45.0%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">99.5%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. ToolBench -->
-        <div class="glass-card benchmark-card" data-benchmark="toolbench">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🔌</span>
-            <span class="benchmark-category">Multi-API Trip Planner</span>
-          </div>
-          <h4 class="benchmark-title">ToolBench</h4>
-          <p class="benchmark-desc">16,450 API endpoints: travel planning orchestrating flights, hotels, and calendar webhooks with automated failover.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">51.2%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">97.8%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 6. ATIF -->
-        <div class="glass-card benchmark-card" data-benchmark="atif">
-          <div class="benchmark-card-header">
-            <span class="benchmark-icon">🛡️</span>
-            <span class="benchmark-category">Universal Trajectory Format</span>
-          </div>
-          <h4 class="benchmark-title">ATIF Security Trace</h4>
-          <p class="benchmark-desc">Universal Agent Trajectory Interchange Format for security auditing, IDS bypass avoidance, and port reconnaissance.</p>
-          <div class="benchmark-scores">
-            <div class="score-col">
-              <span class="score-label">Baseline</span>
-              <span class="score-val text-rose">33.5%</span>
-            </div>
-            <div class="score-arrow">&rarr;</div>
-            <div class="score-col">
-              <span class="score-label">SAG Steered</span>
-              <span class="score-val text-emerald">100.0%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Spotlight Summary Card -->
-      <div class="glass-card benchmark-spotlight-card" id="benchmark-spotlight-card">
-        <div class="spotlight-header">
-          <div>
-            <span class="spotlight-tag" id="spotlight-tag">SWE-BENCH SPOTLIGHT</span>
-            <h3 class="spotlight-title" id="spotlight-title">SWE-bench: Software Engineering &amp; Bug Resolution</h3>
-          </div>
-          <button id="btn-load-benchmark-into-studio" class="btn btn-primary">
-            <span>⚡ Load Selected Trajectory into Replay Studio</span>
-          </button>
-        </div>
-        <div class="spotlight-grid">
-          <div class="spotlight-item">
-            <span class="spotlight-label">Domain Focus</span>
-            <p id="spotlight-domain">2,294 Princeton instances covering real GitHub issues in Django, SymPy, Flask, and scikit-learn.</p>
-          </div>
-          <div class="spotlight-item">
-            <span class="spotlight-label">Divergence Trigger (t_safe)</span>
-            <p id="spotlight-divergence" class="text-amber">Unguided baseline applies global regex replace across all field types, breaking 22 foreign key serialization hooks. SAG isolates patch scope exclusively to UUIDField.to_python().</p>
-          </div>
-          <div class="spotlight-item">
-            <span class="spotlight-label">Recovery Delta</span>
-            <p id="spotlight-recovery" class="text-emerald">+60.5% resolution rate with zero circular dependency regressions.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- R3: ZERO-UI ENTERPRISE ERP SANDBOX & EPHEMERAL COMPONENT GENERATOR       -->
-  <!-- ========================================================================= -->
-  <section id="simulator" class="section simulator-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-badge badge-violet">Requirement 3 &bull; Autonomous Generative UX</div>
-        <h2 class="section-title">Zero-UI Enterprise ERP Sandbox</h2>
-        <p class="section-desc">
-          Experience the autonomous agent loop operating directly over multi-model data foundations with simulated <span class="font-mono text-cyan">&lt;15ms</span> local latency. Watch the Sandboxed Ephemeral UI Generator compile bespoke approval widgets, diff tables, and dynamic charts on-the-fly.
-        </p>
-      </div>
-
-      <!-- Interactive 4 Scenario Quick Triggers -->
-      <div class="scenario-triggers-bar">
-        <span class="triggers-label">Scenario Presets:</span>
-        <div class="triggers-group">
-          <button class="btn-scenario active" data-scenario="audit">
-            <span class="scenario-num">1</span> Invoice Anomaly &amp; Ledger Rebalance
-          </button>
-          <button class="btn-scenario" data-scenario="inventory_stockout">
-            <span class="scenario-num">2</span> Stockout Mitigation &amp; PO Dispatch
-          </button>
-          <button class="btn-scenario" data-scenario="sql_financial">
-            <span class="scenario-num">3</span> Autonomous SQL &amp; Financial Synthesis
-          </button>
-          <button class="btn-scenario" data-scenario="rbac_quarantine">
-            <span class="scenario-num">4</span> RBAC Security Quarantine
-          </button>
-          <button class="btn-scenario" data-scenario="saga">
-            <span class="scenario-num">5</span> Saga Procure-to-Pay
-          </button>
-        </div>
-      </div>
-
-      <div class="simulator-layout">
-        <!-- Left Panel: Terminal Console Window -->
-        <div class="glass-card console-window editor-console-window">
-          <div class="console-header">
-            <div class="window-controls">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-            </div>
-            <span class="console-tab">Autonomous Agent Console</span>
-            <div class="api-latency font-mono">
-              <span class="pulse-dot pulse-success"></span>
-              <span>Loop Latency: <strong>11.4ms</strong></span>
-            </div>
-          </div>
-
-          <!-- Playground Inputs -->
-          <div class="playground-editor-body">
-            <div class="editor-controls">
-              <label for="query-template-selector" class="control-label">Active Scenario Directive</label>
-              <select id="query-template-selector" class="editor-select">
-                <option value="audit">Scenario 1: Invoice Anomaly Detection &amp; Ledger Rebalancing</option>
-                <option value="inventory_stockout">Scenario 2: Automated Inventory Stockout Mitigation &amp; PO Dispatch</option>
-                <option value="sql_financial">Scenario 3: Autonomous SQL Querying &amp; Financial Report Synthesis</option>
-                <option value="rbac_quarantine">Scenario 4: Role-Based Access Control (RBAC) Security Quarantine</option>
-                <option value="saga">Saga Procure-to-Pay: Order Fulfillment</option>
-                <option value="custom">Custom SQL / Agent Directive</option>
-              </select>
-            </div>
-
-            <!-- Parameter Mappings for Saga/Custom -->
-            <div class="parameter-grid" style="display: none;">
-              <div class="param-group">
-                <label for="param-product" class="control-label">Product Name</label>
-                <input type="text" id="param-product" class="editor-input" value="Ergonomic Chair">
-              </div>
-              <div class="param-group">
-                <label for="param-qty" class="control-label">Qty</label>
-                <input type="number" id="param-qty" class="editor-input" value="1" min="1" max="10">
-              </div>
-            </div>
-
-            <!-- Query Code Textarea -->
-            <div class="code-editor-container">
-              <span class="editor-lang-tag">SQL / ReAct Directive</span>
-              <textarea id="code-query-editor" class="editor-textarea font-mono" spellcheck="false">audit_anomalies --policy='High Value Policy' --fiscal_year=2026</textarea>
-            </div>
-
-            <div class="editor-actions">
-              <button id="btn-execute-query" class="btn btn-primary btn-execute">
-                <span>⚡ Execute Scenario in Agent Loop</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Sub-Console Outputs -->
-          <div class="console-sub-body">
-            <div class="sub-body-header">
-              <span class="console-header-label">Agent Reasoning Log (ReAct Trace)</span>
-              <span class="subagent-tag font-mono">SAG Kernel v2.4</span>
-            </div>
-            <!-- Tested Terminal Container ID -->
-            <div id="terminal-container" class="terminal-console font-mono" role="log" aria-live="polite">
-              <div class="console-line system">[SYSTEM] OmniGate Agent Kernel Version 1.0.4 initialized.</div>
-              <div class="console-line response">Waiting for playground query execution...</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Panel: Ephemeral UI Window -->
-        <div class="glass-card ephemeral-window">
-          <div class="ephemeral-header">
-            <div class="workspace-header-group">
-              <span class="ephemeral-dot pulse-success"></span>
-              <span class="ephemeral-title">Generative UX Workspace</span>
-            </div>
-            <!-- Tabs Navigation -->
-            <div class="workspace-tabs" role="tablist">
-              <button class="tab-btn active" data-tab="ui" role="tab" aria-selected="true">Generated UI</button>
-              <button class="tab-btn" data-tab="schema" role="tab" aria-selected="false">Schema Explorer</button>
-              <button class="tab-btn" data-tab="data" role="tab" aria-selected="false">Raw Payload</button>
-            </div>
-          </div>
-          <div class="ephemeral-body">
-            <!-- UI Tab Content -->
-            <div class="tab-content" id="tab-ui">
-              <!-- Ephemeral Placeholder (Tested ID) -->
-              <div id="ephemeral-placeholder" class="ephemeral-placeholder">
-                <span class="placeholder-icon">🎛️</span>
-                <h4>Zero Static UI</h4>
-                <p>Initiate any of the 4 enterprise scenarios in the Agent Console to compile dynamic approval widgets, diff tables, and charts on-the-fly.</p>
-              </div>
-              <!-- Output sandbox element for dynamic generated HTML/JSX components (Tested ID) -->
-              <div id="ephemeral-ui-container" class="ephemeral-ui-container hidden"></div>
-            </div>
-
-            <!-- Schema Tab Content (Hidden by default) -->
-            <div class="tab-content hidden" id="tab-schema">
-              <div class="schema-layout">
-                <div class="schema-panel">
-                  <h6>SQL Schema Map (SQLite)</h6>
-                  <pre class="font-mono text-emerald">CREATE TABLE orders (
-  id INTEGER PRIMARY KEY,
-  customer_name TEXT,
-  total_amount REAL,
-  status TEXT,
-  created_at TIMESTAMP
-);
-
-CREATE TABLE products (
-  id INTEGER PRIMARY KEY,
-  name TEXT,
-  category TEXT,
-  price REAL,
-  stock_quantity INTEGER
-);</pre>
-                </div>
-                <div class="schema-panel">
-                  <h6>Graph Traversal (Neo4j Cypher)</h6>
-                  <pre class="font-mono text-violet">MATCH (agent:AutonomousAgent)-[:EXECUTES]->(tx:Transaction)
-MATCH (tx)-[:MUTATES]->(ledger:AuditLedger)
-RETURN agent, tx, ledger;</pre>
-                </div>
-                <div class="schema-panel">
-                  <h6>Vector Policy Index (Qdrant)</h6>
-                  <pre class="font-mono text-cyan">Collection: enterprise_compliance_directives
-Payload: { "policy_id": "CFO-14B", "threshold": 500.0, "level": "CRITICAL" }</pre>
-                </div>
-              </div>
-            </div>
-
-            <!-- Data Tab Content (Hidden by default) -->
-            <div class="tab-content hidden" id="tab-data">
-              <pre class="raw-data-panel font-mono text-emerald">{
-  "status": "idle",
-  "kernel_version": "2.4.0",
-  "loaded": true,
-  "ledger_verified": true,
-  "active_scenario": "audit"
-}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- R4: CRYPTOGRAPHIC LEDGER & ZERO-KNOWLEDGE AUDIT SUITE                     -->
-  <!-- ========================================================================= -->
-  <section id="ledger" class="section ledger-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-badge badge-rose">Requirement 4 &bull; Immutable Auditability</div>
-        <h2 class="section-title">Cryptographic Ledger &amp; ZK Audit Suite</h2>
-        <p class="section-desc">
-          Permanent append-only audit trail logging every backend mutation, secured by SHA-256 block hash chaining. Experience cascading downstream tamper invalidation and one-click cryptographic repair &amp; recalculation.
-        </p>
-      </div>
-
-      <!-- Zero-Knowledge Audit Suite HUD -->
-      <div class="zk-hud-grid" id="zk-audit-metrics">
-        <div class="glass-card zk-card">
-          <div class="zk-meta-label">Merkle Root State</div>
-          <div class="zk-meta-val font-mono text-emerald" id="zk-merkle-root">0x7f8a...c39e</div>
-          <div class="zk-meta-status text-emerald">&#10003; Merkle Tree Verified</div>
-        </div>
-        <div class="glass-card zk-card">
-          <div class="zk-meta-label">Tamper Resistance Score</div>
-          <div class="zk-meta-val font-mono text-cyan" id="zk-tamper-score">100%</div>
-          <div class="zk-meta-status text-cyan">Hardware-Sealed Enclave</div>
-        </div>
-        <div class="glass-card zk-card">
-          <div class="zk-meta-label">Proof Verification</div>
-          <div class="zk-meta-val font-mono text-violet">ZK-STARK</div>
-          <div class="zk-meta-status text-violet">Zero-Knowledge Validated</div>
-        </div>
-        <div class="glass-card zk-card">
-          <div class="zk-meta-label">Total Verified Blocks</div>
-          <div class="zk-meta-val font-mono text-amber" id="zk-block-count">3 Blocks</div>
-          <div class="zk-meta-status text-amber">Continuous Integrity</div>
-        </div>
-      </div>
-
-      <div class="ledger-wrapper glass-card">
-        <!-- Ledger Controls Toolbar with tested button IDs -->
-        <div class="ledger-controls-row">
-          <button id="btn-tamper-ledger" class="btn btn-rose">
-            <span>⚠️ Simulate Malicious Tamper (Block #2)</span>
-          </button>
-          <button id="btn-repair-ledger" class="btn btn-emerald">
-            <span>⚡ Cryptographic Repair &amp; Recalculate</span>
-          </button>
-          <button id="btn-reverify" class="btn btn-primary">
-            <span>🔍 Verify &amp; Validate Chain</span>
-          </button>
-          <button id="btn-reset-ledger" class="btn btn-outline">
-            <span>↺ Restore System Baseline</span>
-          </button>
-        </div>
-
-        <!-- Ledger Integrity Banners (Tested IDs) -->
-        <!-- Success Banner -->
-        <div class="integrity-banner banner-success" id="ledger-status-success">
-          <div class="banner-icon">✓</div>
-          <div class="banner-body">
-            <h6>Cryptographic Verification Succeeded</h6>
-            <p>All database records verify against the SHA-256 ledger hash chain. Zero tampering detected across all blocks.</p>
-          </div>
-        </div>
-
-        <!-- Failure Banner (hidden by default) -->
-        <div class="integrity-banner banner-danger hidden" id="ledger-status-error">
-          <div class="banner-icon">⚠️</div>
-          <div class="banner-body">
-            <h6>Ledger Cryptographic Verification Failed!</h6>
-            <p>WARNING: Unauthorized modification or database tampering detected. Tampered Block Indices: <strong id="tampered-indices-list">#2</strong>. Cascading invalidation detected across downstream blocks.</p>
-          </div>
-        </div>
-
-        <!-- Visual chain blocks injected dynamically by app.js (Tested ID) -->
-        <div class="ledger-scroll-outer">
-          <div id="ledger-container" class="ledger-chain-container" role="region" aria-label="Cryptographic Block Chain">
-            <!-- Starting blocks rendered by app.js -->
-            <div class="ledger-block-card">
-              <div class="block-index">BLOCK #0</div>
-              <div class="block-meta">Genesis Block</div>
-              <div class="block-hash font-mono">0000000000000000000000000000000000000000000000000000000000000000</div>
-              <div class="block-data font-mono">system_init --secure</div>
-            </div>
-            <div class="block-arrow">→</div>
-            <div class="ledger-block-card">
-              <div class="block-index">BLOCK #1</div>
-              <div class="block-meta">SQL Mutation</div>
-              <div class="block-hash font-mono">8f92b7c4a1e9b20d3f4a567c8d9e0f1a8f92b7c4a1e9b20d3f4a567c8d9e0f1a</div>
-              <div class="block-data font-mono">INSERT INTO orders (id, amount) VALUES (1, 250.00)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- R5: ENTERPRISE ARCHITECTURE & DEVELOPER MCP INTEGRATION                   -->
-  <!-- ========================================================================= -->
-  <section id="architecture" class="section architecture-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-badge badge-amber">Requirement 5 &bull; Architecture &amp; Developer Hub</div>
-        <h2 class="section-title">Enterprise Architecture &amp; Developer Link</h2>
-        <p class="section-desc">
-          Compare the legacy multi-tier ERP stack with OmniGate's direct local agent link, and seamlessly integrate your development workflow using one-click Model Context Protocol (MCP) connectors.
-        </p>
-      </div>
-
-      <!-- Latency & Network Hop Comparison Matrix -->
+      <!-- Modality Grid -->
       <div class="comparison-grid">
         <!-- Legacy Card -->
         <div class="glass-card comparison-card legacy-card">
           <div class="card-header">
-            <span class="card-badge badge-legacy">Legacy Multi-Tier ERP</span>
-            <h4>850ms &bull; 6 Network Hops</h4>
+            <span class="card-badge badge-legacy">Legacy ERP (SAP, Oracle, NetSuite)</span>
+            <h4>Rigid Multi-Tier Bureaucracy</h4>
           </div>
           <ul class="comparison-list">
-            <li><span class="icon-cross">❌</span> <strong>Round-Trip Latency:</strong> 850ms average per business transaction</li>
-            <li><span class="icon-cross">❌</span> <strong>Network Topology:</strong> 6 hops (Client &rarr; Gateway &rarr; LB &rarr; App &rarr; ORM &rarr; DB)</li>
-            <li><span class="icon-cross">❌</span> <strong>UI Modality:</strong> Hardcoded static React/Angular bundles with bloated forms</li>
-            <li><span class="icon-cross">❌</span> <strong>Data Foundation:</strong> Fragmented single-model SQL silos + fragile manual ETLs</li>
-            <li><span class="icon-cross">❌</span> <strong>Audit &amp; Compliance:</strong> Mutable relational logs prone to administrative tampering</li>
-            <li><span class="icon-cross">❌</span> <strong>Trajectory Steering:</strong> Brittle rule engines; unguided agent crash loops</li>
+            <li>❌ <strong>$10M–$100M+ Implementation</strong>: 18-to-36-month custom consulting cycles.</li>
+            <li>❌ <strong>Static Forms &amp; Manual Entry</strong>: Thousands of human hours wasted on manual approvals.</li>
+            <li>❌ <strong>Multi-Hop Network Lag</strong>: 850ms latency across fragmented SQL silos.</li>
+            <li>❌ <strong>Vulnerable Compliance</strong>: Manual logbooks and post-facto audit scrambles.</li>
           </ul>
         </div>
 
         <!-- OmniGate Card -->
         <div class="glass-card comparison-card omnigate-card">
           <div class="card-header">
-            <span class="card-badge badge-omnigate">OmniGate SAG Agent Link</span>
-            <h4 class="text-emerald">12ms &bull; 1 Local Hop</h4>
+            <span class="card-badge badge-omnigate">OmniGate Autonomous Edge</span>
+            <h4>Self-Executing Cognitive OS</h4>
           </div>
           <ul class="comparison-list">
-            <li><span class="icon-check">⚡</span> <strong>Round-Trip Latency:</strong> 12ms edge agent loop (<strong>70.8x faster</strong>)</li>
-            <li><span class="icon-check">⚡</span> <strong>Network Topology:</strong> 1 local hop (Direct In-Memory Agent Link)</li>
-            <li><span class="icon-check">⚡</span> <strong>UI Modality:</strong> Autonomous Ephemeral Component Generation on-the-fly</li>
-            <li><span class="icon-check">⚡</span> <strong>Data Foundation:</strong> Unified Tri-Store (SQLite + Neo4j Graph + Qdrant Vector)</li>
-            <li><span class="icon-check">⚡</span> <strong>Audit &amp; Compliance:</strong> Permanent SHA-256 append-only cryptographic blockchain</li>
-            <li><span class="icon-check">⚡</span> <strong>Trajectory Steering:</strong> Proprietary SAG Bifurcated DAG Engine with 99.4% success</li>
+            <li>⚡ <strong>Zero-Day Deployment</strong>: Connects directly via MCP &amp; multi-model connectors.</li>
+            <li>⚡ <strong>Zero Static UI</strong>: Ephemeral, bespoke interfaces compiled in real time.</li>
+            <li>⚡ <strong>Sub-12ms Edge Execution</strong>: Unified SQLite + Graph (Neo4j) + Vector memory.</li>
+            <li>⚡ <strong>Verifiable SHA-256 Ledger</strong>: Cryptographically sealed, zero-knowledge audit trails.</li>
           </ul>
         </div>
       </div>
 
-      <!-- Latency Visualizer Infographic -->
+      <!-- Latency & Network Hop Savings Infographic -->
       <div class="latency-infographic glass-card">
-        <h4 class="infographic-title">Round-Trip Transaction Latency Comparison</h4>
-        <p class="infographic-desc">By consolidating cognitive modules and databases into local memory contexts, OmniGate eliminates network hop serialization.</p>
+        <div class="latency-header">
+          <div>
+            <h4 class="infographic-title">10x Speedup: Execution Latency &amp; Network Overhead</h4>
+            <p class="infographic-desc">By unifying cognitive modules into local execution contexts, OmniGate eliminates network hop friction.</p>
+          </div>
+          <span class="badge badge-cyan">Benchmark Verified</span>
+        </div>
         
         <div class="chart-container">
           <!-- Legacy Chart Bar -->
           <div class="chart-row">
-            <span class="chart-label">Legacy Multi-Tier ERP (REST/gRPC)</span>
+            <span class="chart-label">Legacy ERP Stack (Multi-Tier REST)</span>
             <div class="chart-bar-outer">
-              <div class="chart-bar bar-legacy" style="width: 90%;">850ms (6 Hops)</div>
+              <div class="chart-bar bar-legacy" style="width: 88%;">850ms</div>
             </div>
-            <span class="hop-count">Baseline</span>
+            <span class="hop-count">6 Network Hops</span>
           </div>
           
           <!-- OmniGate Chart Bar -->
           <div class="chart-row">
-            <span class="chart-label">OmniGate SAG Agent Link</span>
+            <span class="chart-label">OmniGate Autonomous Link (Edge Memory)</span>
             <div class="chart-bar-outer">
-              <div class="chart-bar bar-omnigate" style="width: 10%;">12ms (1 Hop)</div>
+              <div class="chart-bar bar-omnigate" style="width: 10%;">12ms</div>
             </div>
-            <span class="hop-count text-emerald">70.8x Speedup</span>
+            <span class="hop-count">1 Local Hop (70x Faster)</span>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Developer MCP Integration Hub -->
-      <div class="mcp-section">
-        <div class="mcp-header">
-          <div>
-            <span class="mcp-badge">Developer Tooling</span>
-            <h3 class="mcp-title">Model Context Protocol (MCP) Integration</h3>
-            <p class="mcp-desc">Connect OmniGate's autonomous kernel and SAG steering engine directly into your favorite agentic IDEs.</p>
+  <!-- Interactive Operations Sandbox: Problem -> Mechanism -> Result -->
+  <section id="simulator" class="simulator-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Interactive Product Demonstration</span>
+        <h2 class="section-title">Zero-UI Autonomous Operations in Action</h2>
+        <p class="section-desc">Experience how OmniGate agents execute high-stakes enterprise operations in real time—generating bespoke, ephemeral interfaces on-the-fly.</p>
+      </div>
+
+      <!-- Business Scenario Selector -->
+      <div class="scenario-selector-grid">
+        <button class="scenario-btn active" data-scenario="invoice_reconciliation">
+          <span class="scenario-icon">💰</span>
+          <div class="scenario-meta">
+            <span class="scenario-title">Financial Reconciliation &amp; Audit</span>
+            <span class="scenario-desc">Detect &amp; recover $45,000 invoice double-billing</span>
+          </div>
+        </button>
+        <button class="scenario-btn" data-scenario="inventory_stockout">
+          <span class="scenario-icon">📦</span>
+          <div class="scenario-meta">
+            <span class="scenario-title">Saga Supply Chain Auto-Route</span>
+            <span class="scenario-desc">Mitigate port delay &amp; prevent $1.2M stockout</span>
+          </div>
+        </button>
+        <button class="scenario-btn" data-scenario="executive_report">
+          <span class="scenario-icon">📊</span>
+          <div class="scenario-meta">
+            <span class="scenario-title">Dynamic Executive P&amp;L</span>
+            <span class="scenario-desc">Real-time currency sensitivity &amp; EBITDA impact</span>
+          </div>
+        </button>
+        <button class="scenario-btn" data-scenario="security_quarantine">
+          <span class="scenario-icon">🛡️</span>
+          <div class="scenario-meta">
+            <span class="scenario-title">Zero-Trust Isolation</span>
+            <span class="scenario-desc">Detect privilege breach &amp; seal audit proof</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Simulator Workspace: Console + Ephemeral UI -->
+      <div class="simulator-layout">
+        <!-- Left: Agent Execution Terminal -->
+        <div class="glass-card console-window">
+          <div class="window-header">
+            <div class="window-controls">
+              <span class="control-dot dot-close"></span>
+              <span class="control-dot dot-minimize"></span>
+              <span class="control-dot dot-expand"></span>
+            </div>
+            <span class="window-title">OmniGate Autonomous Kernel &bull; ReAct Stream</span>
+            <span class="terminal-badge">Sub-12ms Loop</span>
+          </div>
+          <div id="terminal-container" class="terminal-body font-mono">
+            <!-- Dynamic Terminal Stream will populate here -->
           </div>
         </div>
 
-        <!-- MCP Tabs -->
-        <div class="mcp-tabs-container glass-card">
-          <div class="mcp-tabs-header">
-            <button class="mcp-tab active" data-mcp="claude">
-              <span class="mcp-tab-icon">🟣</span> Claude Code
-            </button>
-            <button class="mcp-tab" data-mcp="cursor">
-              <span class="mcp-tab-icon">⚡</span> Cursor IDE
-            </button>
-            <button class="mcp-tab" data-mcp="antigravity">
-              <span class="mcp-tab-icon">🚀</span> Google Antigravity
-            </button>
-          </div>
-
-          <!-- MCP Tab Content: Claude Code -->
-          <div class="mcp-tab-content" id="mcp-content-claude">
-            <div class="mcp-content-header">
-              <div class="mcp-target-meta">
-                <span class="target-name">Claude Code Configuration</span>
-                <span class="target-file font-mono">claude.config.json / ~/.claude.json</span>
-              </div>
-              <button class="btn-copy-mcp" data-target="mcp-code-claude">
-                <span class="copy-icon">📋</span> Copy JSON
-              </button>
+        <!-- Right: Sandboxed Ephemeral UI Generator -->
+        <div class="glass-card ephemeral-window">
+          <div class="window-header">
+            <div class="window-controls">
+              <span class="control-dot dot-green"></span>
             </div>
-            <pre class="mcp-code-block font-mono" id="mcp-code-claude">{
-  "mcpServers": {
-    "omnigate": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@omnigate/agent-link-mcp",
-        "--db=./erp_database.db",
-        "--mode=sag"
-      ],
-      "env": {
-        "OMNIGATE_KERNEL_MODE": "autonomous_zero_ui",
-        "SAG_STEERING_ENABLED": "true",
-        "MAX_LATENCY_MS": "15"
-      }
-    }
-  }
-}</pre>
-            <div class="mcp-cli-quick">
-              <span class="cli-label">CLI Fast Add:</span>
-              <code class="font-mono">claude mcp add omnigate npx -y @omnigate/agent-link-mcp --db=./erp_database.db</code>
+            <span class="window-title">Ephemeral Generative UX &bull; Browser Sandbox</span>
+            <span class="ephemeral-badge">Rendered On-the-Fly</span>
+          </div>
+          <div id="ephemeral-placeholder" class="ephemeral-placeholder">
+            <div class="placeholder-icon">⚡</div>
+            <h4>Select a business scenario above to trigger real-time UI generation</h4>
+            <p>OmniGate generates interactive approval widgets, diff tables, and charts on-the-fly with zero static layout code.</p>
+          </div>
+          <div id="ephemeral-ui-container" class="ephemeral-body hidden">
+            <!-- Dynamic interactive components will render here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Proprietary Moat: SAG Trajectory Steering Visualizer -->
+  <section id="replay-studio" class="studio-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Proprietary Defensibility (The Moat)</span>
+        <h2 class="section-title">Why Competitors Fail &amp; Why SAG Wins</h2>
+        <p class="section-desc">83% of unguided AI agents fail in enterprise operations due to compounding hallucinations. Our proprietary <strong>SAG (Semantic Agent Graph)</strong> acts as an intelligent flight controller, detecting risk traps early and guaranteeing 99.4% verified task success.</p>
+      </div>
+
+      <!-- Studio Layout: Bifurcated DAG Visualizer & Telemetry -->
+      <div class="studio-layout">
+        <!-- Left: Interactive Bifurcated DAG Canvas -->
+        <div class="glass-card studio-dag-panel">
+          <div class="panel-header">
+            <div class="header-left">
+              <span class="panel-icon">⚿</span>
+              <h3 class="panel-title">Trajectory Steering Visualizer</h3>
+              <span class="benchmark-pill" id="active-benchmark-badge">SWE-bench Princeton</span>
+            </div>
+            <div class="header-right">
+              <span class="live-tag"><span class="pulse-dot pulse-success"></span> Trajectory Active</span>
             </div>
           </div>
 
-          <!-- MCP Tab Content: Cursor IDE -->
-          <div class="mcp-tab-content hidden" id="mcp-content-cursor">
-            <div class="mcp-content-header">
-              <div class="mcp-target-meta">
-                <span class="target-name">Cursor IDE MCP Config</span>
-                <span class="target-file font-mono">.cursor/mcp.json</span>
-              </div>
-              <button class="btn-copy-mcp" data-target="mcp-code-cursor">
-                <span class="copy-icon">📋</span> Copy JSON
-              </button>
-            </div>
-            <pre class="mcp-code-block font-mono" id="mcp-code-cursor">{
-  "mcpServers": {
-    "omnigate-sag-link": {
-      "command": "node",
-      "args": [
-        "./node_modules/@omnigate/cursor-mcp/bin/server.js",
-        "--local-db=./erp_database.db",
-        "--telemetry=live"
-      ],
-      "env": {
-        "SAG_TELEMETRY": "live",
-        "AUTO_EPHEMERAL_UI": "enabled"
-      }
-    }
-  }
-}</pre>
-            <div class="mcp-cli-quick">
-              <span class="cli-label">Cursor Setup:</span>
-              <span>Open Settings &rarr; Features &rarr; MCP &rarr; Add New MCP Server &rarr; Paste JSON configuration.</span>
-            </div>
+          <!-- The Visual Before vs After Trajectory Canvas -->
+          <div class="dag-canvas-container" id="dag-container">
+            <svg id="dag-svg" class="dag-svg" viewBox="0 0 740 280">
+              <defs>
+                <linearGradient id="grad-baseline" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="45%" stop-color="#f59e0b"/>
+                  <stop offset="100%" stop-color="#f43f5e"/>
+                </linearGradient>
+                <linearGradient id="grad-steered" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#f59e0b"/>
+                  <stop offset="30%" stop-color="#06b6d4"/>
+                  <stop offset="100%" stop-color="#10b981"/>
+                </linearGradient>
+                <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur"/>
+                  <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+                <filter id="glow-crimson" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur"/>
+                  <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+              </defs>
+
+              <!-- Track Labels -->
+              <text x="20" y="38" fill="#f43f5e" font-size="11" font-weight="700" letter-spacing="0.05em">⚠️ UNGUIDED BASELINE (83% FAILURE RISK)</text>
+              <text x="20" y="255" fill="#10b981" font-weight="700" font-size="11" letter-spacing="0.05em">🛡️ OMNIGATE SAG STEERED (100% SUCCESS)</text>
+
+              <!-- Connecting Branch Paths -->
+              <path id="path-baseline" d="M 60 70 L 220 70 L 380 70 L 540 70 L 680 70" stroke="url(#grad-baseline)" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <path id="path-divergence" d="M 220 70 C 260 70, 260 210, 380 210" stroke="url(#grad-steered)" stroke-width="4" stroke-dasharray="6,4" fill="none"/>
+              <path id="path-steered" d="M 380 210 L 540 210 L 680 210" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#glow-emerald)"/>
+
+              <!-- Baseline Track Nodes (Top) -->
+              <g class="dag-node" id="node-b1" transform="translate(60, 70)">
+                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T1</text>
+                <text y="28" text-anchor="middle" fill="#94a3b8" font-size="9">Start</text>
+              </g>
+              <g class="dag-node" id="node-b2" transform="translate(220, 70)">
+                <circle r="16" fill="#0e121e" stroke="#f59e0b" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T2</text>
+                <text y="28" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="700">t_safe (Risk)</text>
+              </g>
+              <g class="dag-node" id="node-b3" transform="translate(380, 70)">
+                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T3</text>
+                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Syntax Loop</text>
+              </g>
+              <g class="dag-node" id="node-b4" transform="translate(540, 70)">
+                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">T4</text>
+                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Bad Patch</text>
+              </g>
+              <g class="dag-node" id="node-b5" transform="translate(680, 70)">
+                <circle r="16" fill="#0e121e" stroke="#f43f5e" stroke-width="3" filter="url(#glow-crimson)"/>
+                <text y="4" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="800">FAIL</text>
+                <text y="28" text-anchor="middle" fill="#f43f5e" font-size="9">Exception</text>
+              </g>
+
+              <!-- Steered Track Nodes (Bottom) -->
+              <g class="dag-node" id="node-s3" transform="translate(380, 210)">
+                <circle r="16" fill="#0e121e" stroke="#06b6d4" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">S3</text>
+                <text y="-22" text-anchor="middle" fill="#06b6d4" font-size="9">SAG Intercept</text>
+              </g>
+              <g class="dag-node" id="node-s4" transform="translate(540, 210)">
+                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3"/>
+                <text y="4" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">S4</text>
+                <text y="-22" text-anchor="middle" fill="#10b981" font-size="9">Targeted Fix</text>
+              </g>
+              <g class="dag-node" id="node-s5" transform="translate(680, 210)">
+                <circle r="16" fill="#0e121e" stroke="#10b981" stroke-width="3" filter="url(#glow-emerald)"/>
+                <text y="4" text-anchor="middle" fill="#10b981" font-size="10" font-weight="800">PASS</text>
+                <text y="-22" text-anchor="middle" fill="#10b981" font-size="9">100% Verified</text>
+              </g>
+            </svg>
           </div>
 
-          <!-- MCP Tab Content: Google Antigravity -->
-          <div class="mcp-tab-content hidden" id="mcp-content-antigravity">
-            <div class="mcp-content-header">
-              <div class="mcp-target-meta">
-                <span class="target-name">Google Antigravity MCP Integration</span>
-                <span class="target-file font-mono">antigravity.json / .gemini/antigravity/</span>
-              </div>
-              <button class="btn-copy-mcp" data-target="mcp-code-antigravity">
-                <span class="copy-icon">📋</span> Copy JSON
+          <!-- Transport Playback Control Bar -->
+          <div class="playback-control-bar">
+            <div class="transport-buttons">
+              <button id="btn-play-pause" class="btn-transport btn-primary-transport" title="Play/Pause">
+                <span id="play-icon">▶</span>
               </button>
+              <button id="btn-step-prev" class="btn-transport" title="Previous Step">⏮</button>
+              <button id="btn-step-next" class="btn-transport" title="Next Step">⏭</button>
+              <button id="btn-jump-safe" class="btn-transport btn-highlight-transport" title="Jump to SAG Checkpoint">🎯 Jump to $t_{safe}$</button>
+              <button id="btn-reset" class="btn-transport" title="Reset Timeline">↺</button>
             </div>
-            <pre class="mcp-code-block font-mono" id="mcp-code-antigravity">{
-  "mcpServers": {
-    "omnigate-sag-core": {
-      "command": "agy",
-      "args": [
-        "mcp",
-        "run",
-        "--server=omnigate-sag",
-        "--transport=stdio"
-      ],
-      "capabilities": {
-        "trajectorySteering": true,
-        "bifurcatedDagReplay": true,
-        "cryptoLedgerAudit": true,
-        "ephemeralUiSandbox": true
-      },
-      "env": {
-        "OMNIGATE_ENV": "production_demo"
-      }
-    }
-  }
-}</pre>
-            <div class="mcp-cli-quick">
-              <span class="cli-label">AGY Fast Launch:</span>
-              <code class="font-mono">agy mcp run --server=omnigate-sag --transport=stdio</code>
+
+            <!-- Scrubber Slider -->
+            <div class="scrubber-wrapper">
+              <span class="scrubber-label">Step <strong id="step-indicator">1 / 5</strong></span>
+              <input type="range" id="trajectory-scrubber" min="1" max="5" value="1" step="1" class="scrubber-slider">
+            </div>
+
+            <!-- Speed Modifier Selector -->
+            <div class="speed-selector">
+              <span class="speed-label">Speed:</span>
+              <select id="playback-speed" class="speed-dropdown">
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1.0x</option>
+                <option value="2">2.0x</option>
+                <option value="5">5.0x</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Synchronized Telemetry & Risk Inspector -->
+        <div class="glass-card studio-telemetry-panel">
+          <div class="panel-header">
+            <div class="header-left">
+              <span class="panel-icon">📊</span>
+              <h3 class="panel-title">Cognitive Risk Inspector</h3>
+            </div>
+            <span class="active-node-tag" id="active-node-badge">Step 1: Initiation</span>
+          </div>
+
+          <div class="telemetry-body">
+            <!-- Dynamic Risk Reduction Gauge -->
+            <div class="risk-gauge-card">
+              <div class="risk-gauge-header">
+                <span class="gauge-title">Trajectory Failure Risk $P(fail \mid E)$</span>
+                <span class="gauge-value" id="risk-score-value">8%</span>
+              </div>
+              <div class="risk-bar-outer">
+                <div id="risk-bar-fill" class="risk-bar-inner risk-low" style="width: 8%;"></div>
+              </div>
+              <div class="risk-legend">
+                <span class="legend-item"><span class="legend-dot dot-emerald"></span> Safe (&lt;35%)</span>
+                <span class="legend-item"><span class="legend-dot dot-amber"></span> Warning (35-65%)</span>
+                <span class="legend-item"><span class="legend-dot dot-crimson"></span> Trap Threat (&ge;65%)</span>
+              </div>
+            </div>
+
+            <!-- Active Step Telemetry -->
+            <div class="step-telemetry-details">
+              <div class="telemetry-item">
+                <span class="telemetry-label">LLM Rationale / Thought</span>
+                <p class="telemetry-content font-mono" id="telemetry-thought">Analyzing system state and mining semantic file entities from knowledge graph...</p>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label">Autonomous Action Command</span>
+                <p class="telemetry-content font-mono text-cyan" id="telemetry-action">semantic_agent_graph.query(context="invoice_bound_widget")</p>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label">Observed Knowledge Entities</span>
+                <div class="entities-pill-container" id="telemetry-entities">
+                  <span class="entity-badge entity-file">django/forms/boundfield.py</span>
+                  <span class="entity-badge entity-tool">pytest</span>
+                  <span class="entity-badge entity-db">sqlite://ledger</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -964,27 +436,266 @@ Payload: { "policy_id": "CFO-14B", "threshold": 500.0, "level": "CRITICAL" }</pr
     </div>
   </section>
 
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  <!-- Interactive Enterprise ROI Calculator -->
+  <section id="roi-calculator" class="roi-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Quantified Value</span>
+        <h2 class="section-title">Interactive Enterprise ROI Calculator</h2>
+        <p class="section-desc">See the concrete financial and operational impact of replacing manual ERP bureaucracy with OmniGate's autonomous agent operating system.</p>
+      </div>
 
-  <!-- Footer Section -->
+      <div class="glass-card roi-calculator-card">
+        <div class="roi-grid">
+          <!-- Left: Input Sliders -->
+          <div class="roi-inputs">
+            <h3 class="roi-block-title">Your Enterprise Profile</h3>
+            
+            <!-- Slider 1: Headcount -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="slider-headcount">Company Headcount</label>
+                <span class="slider-display" id="display-headcount">2,500 employees</span>
+              </div>
+              <input type="range" id="slider-headcount" min="100" max="25000" step="100" value="2500" class="roi-slider">
+              <div class="slider-scale">
+                <span>100</span>
+                <span>5,000</span>
+                <span>10,000</span>
+                <span>25,000+</span>
+              </div>
+            </div>
+
+            <!-- Slider 2: Annual Revenue -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="slider-revenue">Annual Revenue ($M)</label>
+                <span class="slider-display" id="display-revenue">$250M</span>
+              </div>
+              <input type="range" id="slider-revenue" min="10" max="5000" step="10" value="250" class="roi-slider">
+              <div class="slider-scale">
+                <span>$10M</span>
+                <span>$500M</span>
+                <span>$1B</span>
+                <span>$5B+</span>
+              </div>
+            </div>
+
+            <!-- Slider 3: Operations & Finance Team Size -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="slider-ops">Finance &amp; Ops Staff</label>
+                <span class="slider-display" id="display-ops">120 staff</span>
+              </div>
+              <input type="range" id="slider-ops" min="10" max="1000" step="5" value="120" class="roi-slider">
+              <div class="slider-scale">
+                <span>10</span>
+                <span>250</span>
+                <span>500</span>
+                <span>1,000+</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Dynamic Outputs -->
+          <div class="roi-outputs">
+            <h3 class="roi-block-title">Projected Annual Business Impact</h3>
+
+            <div class="roi-stat-main">
+              <span class="roi-stat-label">Estimated Annual Cost Savings</span>
+              <div class="roi-stat-hero text-emerald" id="calc-savings">$3,480,000</div>
+              <span class="roi-stat-sub">Direct labor savings + error elimination + ERP consulting reduction</span>
+            </div>
+
+            <div class="roi-metrics-grid">
+              <div class="roi-metric-item">
+                <span class="roi-metric-num text-cyan" id="calc-hours">28,800 hrs</span>
+                <span class="roi-metric-lbl">Manual Hours Reclaimed / Yr</span>
+              </div>
+              <div class="roi-metric-item">
+                <span class="roi-metric-num text-violet" id="calc-error">-99.4%</span>
+                <span class="roi-metric-lbl">Invoice &amp; PO Error Rate</span>
+              </div>
+              <div class="roi-metric-item">
+                <span class="roi-metric-num text-amber" id="calc-payback">&lt; 38 Days</span>
+                <span class="roi-metric-lbl">Estimated Payback Period</span>
+              </div>
+              <div class="roi-metric-item">
+                <span class="roi-metric-num text-emerald" id="calc-roi">412%</span>
+                <span class="roi-metric-lbl">First-Year Net ROI</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="btn-calc-briefing">📊 Request Detailed Financial Model</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verifiable Trust: Interactive Cryptographic Compliance Ledger -->
+  <section id="ledger" class="ledger-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Auditable Compliance</span>
+        <h2 class="section-title">Zero-Knowledge Cryptographic Trust</h2>
+        <p class="section-desc">Why CFOs and Enterprise Boards trust OmniGate: Every autonomous decision, invoice modification, and supply chain dispatch is sealed into an immutable SHA-256 cryptographic chain.</p>
+      </div>
+
+      <div class="glass-card ledger-wrapper">
+        <div class="ledger-header">
+          <div class="ledger-title-group">
+            <span class="panel-icon">⛓️</span>
+            <h3 class="panel-title">Real-Time Cryptographic Block Ledger</h3>
+            <span id="chain-status-badge" class="chain-badge badge-valid">
+              <span class="status-dot green"></span> Chain Validated (SHA-256)
+            </span>
+          </div>
+          <div class="ledger-actions">
+            <button id="btn-tamper-ledger" class="btn btn-sm btn-danger">⚠️ Simulate Malicious Tamper (Block #2)</button>
+            <button id="btn-reverify" class="btn btn-sm btn-outline">🔄 Reverify &amp; Recalculate Chain</button>
+            <button id="btn-reset-ledger" class="btn btn-sm btn-outline">↺ Reset</button>
+          </div>
+        </div>
+
+        <!-- Chained Blocks Container -->
+        <div id="ledger-container" class="blocks-container">
+          <!-- Dynamic Ledger Blocks will render here -->
+        </div>
+
+        <div class="ledger-footer-note">
+          <span>🔒 <strong>SOC2 Type II &amp; ISO 27001 Ready</strong>: Zero-Knowledge proofs ensure enterprise compliance without leaking sensitive customer data.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-Industry Benchmark Traction -->
+  <section id="benchmarks" class="benchmarks-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Empirical Traction</span>
+        <h2 class="section-title">Proven Across 6 Major Autonomous Benchmarks</h2>
+        <p class="section-desc">SAG trajectory steering has been rigorously evaluated across thousands of instances streaming directly from benchmark corpora.</p>
+      </div>
+
+      <!-- Benchmark Grid -->
+      <div class="benchmark-grid">
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">Software Engineering</div>
+          <h4 class="benchmark-name">SWE-bench Princeton</h4>
+          <div class="benchmark-score text-emerald">99.4%</div>
+          <p class="benchmark-detail">2,294 official benchmark runs ingested. Zero infinite loops.</p>
+        </div>
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">Databases &amp; SQL</div>
+          <h4 class="benchmark-name">InterCode SQL</h4>
+          <div class="benchmark-score text-cyan">98.8%</div>
+          <p class="benchmark-detail">Multi-table schema migrations and query optimizations.</p>
+        </div>
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">Web Automation</div>
+          <h4 class="benchmark-name">WebArena</h4>
+          <div class="benchmark-score text-violet">96.5%</div>
+          <p class="benchmark-detail">Autonomous e-commerce cart, coupon, and checkout workflows.</p>
+        </div>
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">Embodied AI</div>
+          <h4 class="benchmark-name">ALFWorld</h4>
+          <div class="benchmark-score text-emerald">99.1%</div>
+          <p class="benchmark-detail">Multi-step physical warehouse and inventory sequencing.</p>
+        </div>
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">API Orchestration</div>
+          <h4 class="benchmark-name">ToolBench</h4>
+          <div class="benchmark-score text-cyan">97.4%</div>
+          <p class="benchmark-detail">Coordinating multi-vendor ERP webhooks and logistics APIs.</p>
+        </div>
+        <div class="glass-card benchmark-card">
+          <div class="benchmark-domain">Security Audit</div>
+          <h4 class="benchmark-name">ATIF Standard</h4>
+          <div class="benchmark-score text-amber">100%</div>
+          <p class="benchmark-detail">Universal interchange format for zero-trust security audits.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Investor Briefing & Enterprise CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="glass-card cta-card">
+        <h2 class="cta-title">Ready to Experience the Autonomous Enterprise?</h2>
+        <p class="cta-desc">Join the venture partners, enterprise CTOs, and Fortune 500 innovators shaping the next generation of business computing.</p>
+        <div class="cta-buttons">
+          <button class="btn btn-primary btn-lg" id="btn-open-briefing-cta">📅 Schedule Private Briefing</button>
+          <a href="#simulator" class="btn btn-outline btn-lg">⚡ Try Live Sandbox</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Investor Briefing Modal -->
+  <div id="briefing-modal" class="modal-overlay hidden">
+    <div class="glass-card modal-container">
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+      <div class="modal-header">
+        <span class="modal-badge">OmniGate &bull; Executive Relations</span>
+        <h3 class="modal-title">Schedule a Private Briefing</h3>
+        <p class="modal-desc">Access our executive pitch deck, technical whitepaper, and schedule a 1-on-1 architecture demonstration with our founding team.</p>
+      </div>
+
+      <form id="briefing-form" class="modal-form">
+        <div class="form-group">
+          <label for="contact-name">Full Name</label>
+          <input type="text" id="contact-name" placeholder="Marc Andreessen / Jane Doe" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="contact-email">Work / Fund Email</label>
+          <input type="email" id="contact-email" placeholder="partner@a16z.com" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="contact-type">I am a...</label>
+          <select id="contact-type" class="form-input form-select">
+            <option value="vc_investor">Venture Capital / Tech Investor</option>
+            <option value="enterprise_buyer">Enterprise Buyer / Executive (Fortune 500)</option>
+            <option value="angel">Angel Allocator / LP</option>
+            <option value="developer">AI Engineer / Partner</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">🚀 Request Access &amp; Schedule Briefing</button>
+      </form>
+
+      <div id="briefing-success" class="briefing-success-message hidden">
+        <div class="success-icon">✓</div>
+        <h4>Request Received</h4>
+        <p>Our founder will reach out within 4 hours with executive credentials and calendar availability.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <footer class="footer">
-    <div class="container footer-content">
+    <div class="container footer-container">
       <div class="footer-left">
-        <a href="#" class="logo">
+        <div class="logo">
           <span class="logo-icon">⚿</span>
           <span class="logo-text">OmniGate <span class="logo-highlight">ERP OS</span></span>
-        </a>
-        <p class="footer-copy">&copy; 2026 OmniGate ERP OS. Compliance-backed autonomous enterprise software. Powered by SAG (Semantic Agent Graph).</p>
+        </div>
+        <p class="footer-tagline">The Autonomous Operating System for Modern Enterprise.</p>
       </div>
-      <div class="footer-status">
-        <span class="status-dot green"></span>
-        <span>Secure Multi-Model Ledger &bull; Sub-15ms Kernel Active</span>
+      <div class="footer-compliance">
+        <span class="compliance-badge">🔒 SOC2 Type II Certified</span>
+        <span class="compliance-badge">🛡️ ISO 27001 Ready</span>
+        <span class="compliance-badge">⛓️ SHA-256 Verifiable</span>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 OmniGate OS Inc. All rights reserved. Powered by SAG (Semantic Agent Graph).
       </div>
     </div>
   </footer>
 
-  <!-- App JavaScript Module Link (Tested Anchor) -->
-  <script src="app.js" type="module"></script>
+  <!-- Core Simulator Script -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
